@@ -1,0 +1,260 @@
+:root {
+  /* Warm plaster and travertine */
+  --bg:        #F1EBE1;
+  --bg-sunk:   #E8E0D4;
+  --ink:       #2B2622;
+  --ink-muted: #665C53;
+  --hairline:  #D6CCBD;
+
+  /* Accents, used sparingly */
+  --brass:     #B08D57;
+  --red:       #8C3B2E;
+  --green:     #5F7F6A;
+  --terracotta:#B5654A;
+
+  --serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans:  "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --measure: 38rem;
+  --gutter: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:        #1E1B18;
+    --bg-sunk:   #262220;
+    --ink:       #E7E0D6;
+    --ink-muted: #A79C90;
+    --hairline:  #3B352F;
+
+    --brass:     #C9A876;
+    --red:       #D07A64;
+    --green:     #8FB39A;
+    --terracotta:#CE8267;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.65;
+  font-weight: 400;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 5.5rem var(--gutter) 4rem;
+}
+
+/* ---- Masthead ------------------------------------------------------ */
+
+.masthead h1 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(2.4rem, 8.5vw, 3.4rem);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  margin: 0 0 1.1rem;
+}
+
+/* The one brass hairline: a stepped joint under the name. */
+.masthead::after {
+  content: "";
+  display: block;
+  height: 7px;
+  width: 13rem;
+  max-width: 100%;
+  margin: 2.1rem 0 2.6rem;
+  background-image:
+    linear-gradient(var(--brass), var(--brass)),
+    linear-gradient(var(--brass), var(--brass));
+  background-repeat: no-repeat;
+  background-size: 9rem 1px, 9rem 1px;
+  background-position: 0 0, 4rem 6px;
+}
+
+.descriptor {
+  font-family: var(--serif);
+  font-size: 1.12rem;
+  line-height: 1.55;
+  color: var(--ink-muted);
+  max-width: 30rem;
+  margin: 0;
+}
+
+/* ---- Sections ------------------------------------------------------ */
+
+main section {
+  margin: 0 0 3.6rem;
+}
+
+main section:last-child { margin-bottom: 0; }
+
+h2 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.32rem;
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+  margin: 0 0 0.9rem;
+  padding-top: 0.85rem;
+  position: relative;
+}
+
+/* Exposed joint: the rule runs out past the text block on the left. */
+h2::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -1.5rem;
+  right: 0;
+  border-top: 1px solid var(--hairline);
+}
+
+p { margin: 0 0 1rem; max-width: 34rem; }
+p:last-child { margin-bottom: 0; }
+
+/* ---- Links --------------------------------------------------------- */
+
+a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--brass);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+}
+
+a:hover { color: var(--red); text-decoration-color: var(--red); }
+
+ul.links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul.links li {
+  padding: 0.42rem 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+ul.links li:last-child { border-bottom: 0; }
+
+ul.links a { text-decoration: none; display: inline-block; }
+ul.links a:hover,
+ul.links a:focus-visible { color: var(--red); }
+
+/* ---- Forms --------------------------------------------------------- */
+
+.form { margin-top: 1.6rem; }
+
+.field { margin-bottom: 1rem; max-width: 26rem; }
+
+label {
+  display: block;
+  font-size: 0.92rem;
+  color: var(--ink-muted);
+  margin-bottom: 0.3rem;
+}
+
+input[type="text"],
+input[type="email"],
+textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 1rem;
+  color: var(--ink);
+  background: var(--bg-sunk);
+  border: 1px solid var(--hairline);
+  border-radius: 0;
+  padding: 0.52rem 0.6rem;
+}
+
+textarea { resize: vertical; }
+
+input::placeholder { color: var(--ink-muted); opacity: 0.75; }
+
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--terracotta);
+  outline-offset: 1px;
+  border-color: var(--terracotta);
+}
+
+button {
+  font: inherit;
+  font-size: 0.96rem;
+  font-weight: 500;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  padding: 0.46rem 1.1rem;
+  cursor: pointer;
+}
+
+button:hover { color: var(--red); border-color: var(--red); }
+button:disabled { opacity: 0.5; cursor: default; }
+
+.form--inline .field { margin-bottom: 0.8rem; }
+
+.form-status {
+  margin: 0.9rem 0 0;
+  font-size: 0.94rem;
+  color: var(--ink-muted);
+  min-height: 1.4em;
+}
+
+.form-status.is-ok    { color: var(--green); }
+.form-status.is-error { color: var(--red); }
+
+/* ---- Footer -------------------------------------------------------- */
+
+footer {
+  margin-top: 4.5rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--hairline);
+}
+
+footer p {
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+/* ---- Focus and skip link ------------------------------------------- */
+
+:focus-visible {
+  outline: 2px solid var(--terracotta);
+  outline-offset: 2px;
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+}
+
+.skip:focus {
+  left: var(--gutter);
+  top: 0.5rem;
+  background: var(--bg-sunk);
+  padding: 0.5rem 0.8rem;
+  z-index: 10;
+}
+
+.hidden { display: none; }
+
+@media (max-width: 30rem) {
+  .page { padding-top: 3.5rem; }
+  h2::before { left: 0; }
+}
