@@ -8,7 +8,7 @@ index.html     the page
 contact.html   the contact form
 style.css      all styles, light and dark
 views.js       the linear/visual view toggle on the home page
-theme.js       the Light / Dark / System control in the top nav
+theme.js       the theme icon in the top nav (cycles light, dark, system)
 img/           the Scarpa drawing behind the landing boxes, and the Pax Pamir photograph
 favicon.svg    SM monogram
 _headers       security headers for Cloudflare Pages
@@ -58,7 +58,7 @@ overwrite it. Only using the nav link changes what is stored.
 
 ## The theme control
 
-Three options in the top-right nav: Light, Dark, System. The choice sets `data-theme` on
+One icon in the top-right nav that cycles light (sun), dark (moon), system (monitor). The choice sets `data-theme` on
 `<html>` (`light`, `dark`, or no attribute at all for System) and is stored in
 `localStorage` under `sm-theme`. A three-line inline script in the `<head>` of both pages
 applies it before the first paint, so switching to Dark and reloading never flashes the

@@ -1,5 +1,5 @@
 /*
-  Light / Dark / System.
+  Theme: one button cycling light > dark > system.
 
   The choice lives in localStorage under "sm-theme" and is applied as
   data-theme="light" or data-theme="dark" on <html>. System means no attribute
@@ -12,10 +12,9 @@
   'use strict';
 
   var STORE = 'sm-theme';
-  var group = document.getElementById('themes');
-  if (!group) return;
-
-  var buttons = group.querySelectorAll('[data-theme-set]');
+  var ORDER = ['light', 'dark', 'system'];
+  var button = document.getElementById('theme');
+  if (!button) return;
 
   function stored() {
     try { return localStorage.getItem(STORE); } catch (e) { return null; }
@@ -34,18 +33,17 @@
       else { localStorage.setItem(STORE, choice); }
     } catch (e) { /* private mode, ignore */ }
 
-    for (var i = 0; i < buttons.length; i++) {
-      var on = buttons[i].getAttribute('data-theme-set') === choice;
-      buttons[i].setAttribute('aria-pressed', on ? 'true' : 'false');
-    }
+    button.setAttribute('data-theme-state', choice);
+    button.setAttribute('aria-label', 'Color theme: ' + choice + '. Click to change.');
+    button.setAttribute('title', 'Theme: ' + choice);
   }
 
-  for (var i = 0; i < buttons.length; i++) {
-    buttons[i].addEventListener('click', function (event) {
-      apply(event.currentTarget.getAttribute('data-theme-set'));
-    });
-  }
+  button.addEventListener('click', function () {
+    var current = button.getAttribute('data-theme-state');
+    var next = ORDER[(ORDER.indexOf(current) + 1) % ORDER.length];
+    apply(next);
+  });
 
   apply(stored() || 'system');
-  group.hidden = false;
+  button.hidden = false;
 })();
