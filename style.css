@@ -112,14 +112,14 @@ main section {
 
 main section:last-child { margin-bottom: 0; }
 
-/* Home: the three sections share one fixed height, set by the tallest. */
-main.stack {
+/* Home, simple view: the three sections share one fixed height, set by the tallest. */
+.pane {
   display: grid;
   grid-auto-rows: 1fr;
   row-gap: 3.2rem;
 }
 
-main.stack section { margin: 0; }
+.pane section { margin: 0; }
 
 h2 {
   font-family: var(--serif);
@@ -286,4 +286,245 @@ footer p {
   .page { padding-top: 3.5rem; }
   .topnav { margin-top: -1.6rem; }
   h2::before { left: 0; }
+}
+
+/* =====================================================================
+   Fun view
+   =====================================================================
+
+   Added by views.js as class "fun" on <body>; data-open names the section
+   that is showing. Without JavaScript none of this applies and the page is
+   the simple view. Everything below is scoped to body.fun so the simple
+   view and contact.html are untouched.
+
+   Landing   three square boxes across a wider-than-measure row
+   Open      the boxes become 3.5rem vertical tabs and the chosen section
+             sits between them at the normal 38rem measure
+
+   The tabs to the left of the open section, and the open one itself, keep
+   their place; the rest move after the text. That is done with flex order,
+   and it stays seamless because the text pane grows out of zero width.
+   --------------------------------------------------------------------- */
+
+body.fun {
+  --fun-w:   53rem;                       /* ~1.4x the 38rem text measure */
+  --box-gap: 0.85rem;
+  --tab-w:   3.5rem;
+  --open-h:  24rem;
+  --dur:     450ms;
+  --box-w:   calc((min(var(--fun-w), 100vw - 2 * var(--gutter)) - 2 * var(--box-gap)) / 3);
+}
+
+.topnav { gap: 1.2rem; }
+
+body:not(.fun) .boxes { display: none; }
+
+/* ---- The row ------------------------------------------------------- */
+
+body.fun #main {
+  width: min(var(--fun-w), calc(100vw - 2 * var(--gutter)));
+  margin-left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: stretch;
+  gap: var(--box-gap);
+  height: var(--box-w);                   /* square boxes in the landing state */
+  transition: height var(--dur) ease-in-out;
+}
+
+body.fun[data-open] #main { height: var(--open-h); }
+
+/* The wrapper exists for the mobile layout; on wide screens the three
+   buttons need to be flex children of <main> itself. */
+body.fun .boxes { display: contents; }
+
+/* ---- Boxes and tabs ------------------------------------------------ */
+
+body.fun .box {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--brass);
+  border-radius: 0;
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    flex-grow   var(--dur) ease-in-out,
+    flex-basis  var(--dur) ease-in-out,
+    transform   var(--dur) ease-in-out,
+    border-color 200ms ease;
+}
+
+body.fun .box:focus-visible { outline-offset: -4px; }
+body.fun .box:hover { border-color: var(--brass); }
+
+body.fun[data-open] .box { flex: 0 0 var(--tab-w); }
+
+/* Unselected tabs step back; the selected one holds full brass and gets the
+   small square marker, an echo of the stepped joint under the name. */
+body.fun[data-open] .box:not(.is-open) {
+  border-color: color-mix(in srgb, var(--brass) 45%, transparent);
+}
+
+body.fun .box.is-open::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  background: var(--brass);
+}
+
+/* ---- Labels -------------------------------------------------------- */
+
+body.fun .box-label {
+  position: relative;
+  z-index: 1;
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: clamp(1.1rem, 2.9vw, 1.7rem);
+  letter-spacing: -0.012em;
+  line-height: 1;
+  color: var(--ink-muted);
+  transition: color 200ms ease;
+}
+
+body.fun[data-open] .box-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);              /* reads bottom to top */
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+}
+
+body.fun .box:hover .box-label { color: var(--ink); }
+body.fun .box.is-open .box-label { color: var(--ink); }
+
+/* ---- Background photographs ---------------------------------------- */
+
+body.fun .box::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  filter: grayscale(1) sepia(0.35) contrast(1.04);
+  opacity: 0.18;
+  transition: opacity 250ms ease;
+}
+
+body.fun[data-open] .box::after { opacity: 0; }
+
+#box-now::after         { background-image: url("img/scarpa-1.jpg"); }
+#box-elsewhere::after   { background-image: url("img/scarpa-2.jpg"); }
+#box-battleforce::after { background-image: url("img/scarpa-3.jpg"); }
+
+@media (prefers-color-scheme: dark) {
+  body.fun .box::after { opacity: 0.22; }
+}
+
+/* ---- Text pane ----------------------------------------------------- */
+
+/* Order 4 puts the pane after any tab that keeps its place and before the
+   ones that move to the right of the text. */
+#box-now         { order: 1; }
+#box-elsewhere   { order: 2; }
+#box-battleforce { order: 3; }
+body.fun .pane   { order: 4; }
+
+body.fun[data-open="now"]       #box-elsewhere   { order: 6; }
+body.fun[data-open="now"]       #box-battleforce { order: 7; }
+body.fun[data-open="elsewhere"] #box-battleforce { order: 7; }
+
+body.fun .pane {
+  display: block;
+  flex: 0 1 0;
+  min-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  /* Cancels the flex gap the empty pane would otherwise add in the landing state. */
+  margin-inline-start: calc(-1 * var(--box-gap));
+  transition:
+    flex-grow  var(--dur) ease-in-out,
+    transform  var(--dur) ease-in-out,
+    margin     var(--dur) ease-in-out,
+    opacity    200ms ease 250ms;
+}
+
+body.fun[data-open] .pane {
+  flex: 1 1 0;
+  opacity: 1;
+  margin-inline-start: 0;
+  overflow-y: auto;
+  padding-inline: 0.15rem;
+}
+
+/* The exposed rule over each h2 runs out to the left of the text block. In the
+   fun view there is a tab sitting there, so pull it back in. */
+body.fun .pane h2::before { left: 0; }
+
+body.fun .pane section { margin: 0; }
+
+/* ---- Mobile: bars in the landing state, a strip of tabs when open ---- */
+
+@media (max-width: 40rem) {
+  body.fun #main {
+    width: 100%;
+    margin-left: 0;
+    transform: none;
+    flex-direction: column;
+    gap: 0;
+    height: auto;
+  }
+
+  body.fun .boxes {
+    display: flex;
+    flex-direction: column;
+    gap: var(--box-gap);
+    order: 1;
+  }
+
+  body.fun .box,
+  body.fun[data-open] .box { flex: 0 0 auto; height: 7rem; }
+
+  body.fun[data-open] .boxes { flex-direction: row; }
+  body.fun[data-open] .box { flex: 1 1 0; height: 2.9rem; }
+
+  body.fun[data-open] .box-label {
+    writing-mode: horizontal-tb;
+    transform: none;
+    font-size: 0.95rem;
+  }
+
+  body.fun .pane,
+  body.fun[data-open] .pane {
+    flex: 0 1 auto;
+    margin-inline-start: 0;
+    overflow: visible;
+    padding-inline: 0;
+  }
+
+  body.fun[data-open] .pane { margin-top: 1.8rem; }
+}
+
+/* ---- Motion -------------------------------------------------------- */
+
+body.no-anim,
+body.no-anim *,
+body.no-anim *::before,
+body.no-anim *::after { transition: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  body.fun #main,
+  body.fun .box,
+  body.fun .box::after,
+  body.fun .box-label,
+  body.fun .pane { transition: none; }
 }

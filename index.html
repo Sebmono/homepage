@@ -14,11 +14,29 @@
 </head>
 <body>
 
+<!--
+  Image credits (also in README.md). All Creative Commons Attribution, via Wikimedia Commons.
+
+  img/scarpa-1.jpg  "Carlo Scarpa, architect: the Cangrande space, Castelvecchio Museum,
+                    Verona 1956-1973" by seier+seier. CC BY 2.0.
+                    https://commons.wikimedia.org/wiki/File:Carlo_scarpa,_architect-_the_cangrande_space,_castelvecchio_museum,_verona_1956-1973_(31252404523).jpg
+
+  img/scarpa-2.jpg  "Palazzo Querini Stampalia, piano terra e giardino di Carlo Scarpa"
+                    by Sailko. CC BY 3.0.
+                    https://commons.wikimedia.org/wiki/File:Palazzo_querini_stampalia,_piano_terra_e_giardino_di_carlo_scarpa_09.jpg
+
+  img/scarpa-3.jpg  "Olivetti Exhibition centre by Carlo Scarpa, St Mark's Square, Venice,
+                    Italy" by fusion-of-horizons. CC BY 2.0.
+                    https://commons.wikimedia.org/wiki/File:Olivetti_Exhibition_centre_by_Carlo_Scarpa,_St_Mark%27s_Square,_Venice,_Italy.jpg
+-->
+
 <a class="skip" href="#main">Skip to content</a>
 
 <div class="page">
 
   <nav class="topnav" aria-label="Site">
+    <!-- Unhidden by views.js. Without JavaScript the page is the simple view only. -->
+    <a class="viewtoggle" id="view-toggle" href="?view=simple" hidden>Simple view</a>
     <a href="contact.html">Contact me</a>
   </nav>
 
@@ -27,41 +45,61 @@
     <p class="descriptor">Product manager. Founding team at Sandgarden. Previously security products at BeyondTrust and StrongDM.</p>
   </header>
 
-  <main id="main" class="stack">
+  <main id="main">
 
-    <section aria-labelledby="now-h">
-      <h2 id="now-h">Now</h2>
-      <p>I build AI products at Sandgarden, where I work on Doc Holiday and Featurette. Before that I spent most of a decade shipping security and infrastructure products.</p>
-      <p>On evenings and weekends I am building an unofficial digital implementation of the BattleForce game system from BattleTech, written with Claude Code.</p>
-    </section>
+    <!-- display:contents in the fun view, so the three buttons become direct flex
+         children of <main> and can be ordered around the text pane. -->
+    <div class="boxes">
+      <button type="button" class="box" id="box-now"
+              aria-expanded="false" aria-controls="sec-now" hidden>
+        <span class="box-label">now</span>
+      </button>
+      <button type="button" class="box" id="box-elsewhere"
+              aria-expanded="false" aria-controls="sec-elsewhere" hidden>
+        <span class="box-label">elsewhere</span>
+      </button>
+      <button type="button" class="box" id="box-battleforce"
+              aria-expanded="false" aria-controls="sec-battleforce" hidden>
+        <span class="box-label">battleforce</span>
+      </button>
+    </div>
 
-    <section aria-labelledby="elsewhere-h">
-      <h2 id="elsewhere-h">Elsewhere</h2>
-      <ul class="links">
-        <li><a href="https://www.linkedin.com/in/sebastianmankowski/" rel="noopener" target="_blank">LinkedIn</a></li>
-        <li><a href="https://github.com/Sebmono" rel="noopener" target="_blank">GitHub</a></li>
-        <li><a href="https://boardgamegeek.com/collection/user/Sebmono?geekranks=Board%20Game%20Rank&amp;excludesubtype=boardgameexpansion&amp;objecttype=thing&amp;sort=rating&amp;sortdir=desc&amp;rankobjecttype=subtype&amp;rankobjectid=1&amp;columns=title%7Cstatus%7Crank%7Crating%7Cbggrating%7Ccomment%7Cavgweight&amp;own=1&amp;ff=1&amp;subtype=boardgame" rel="noopener" target="_blank">BoardGameGeek</a></li>
-        <li><a href="https://rally-the-troops.com/user/Sebmono" rel="noopener" target="_blank">Rally the Troops!</a></li>
-      </ul>
-    </section>
+    <div class="pane" id="pane">
 
-    <section aria-labelledby="bf-h">
-      <h2 id="bf-h">BattleForce</h2>
-      <p>A digital implementation of the BattleForce game system, built for people who already own the books and want to stop doing the arithmetic by hand. It is an unofficial fan project, not affiliated with or endorsed by Catalyst Game Labs, Topps, or Microsoft. BattleTech and BattleForce are trademarks of their respective owners.</p>
+      <section id="sec-now" role="region" aria-labelledby="now-h">
+        <h2 id="now-h">Now</h2>
+        <p>I build AI products at Sandgarden, where I work on Doc Holiday and Featurette. Before that I spent most of a decade shipping security and infrastructure products.</p>
+        <p>On evenings and weekends I am building an unofficial digital implementation of the BattleForce game system from BattleTech, written with Claude Code.</p>
+      </section>
 
-      <form class="form form--inline"
-            action="https://buttondown.com/api/emails/embed-subscribe/BUTTONDOWN_USERNAME"
-            method="post"
-            target="popupwindow"
-            onsubmit="window.open('https://buttondown.com/BUTTONDOWN_USERNAME', 'popupwindow')">
-        <label for="bd-email">Sign up to hear more</label>
-        <div class="row">
-          <input id="bd-email" type="email" name="email" autocomplete="email" placeholder="you@example.com" required>
-          <button type="submit">Sign up</button>
-        </div>
-      </form>
-    </section>
+      <section id="sec-elsewhere" role="region" aria-labelledby="elsewhere-h">
+        <h2 id="elsewhere-h">Elsewhere</h2>
+        <ul class="links">
+          <li><a href="https://www.linkedin.com/in/sebastianmankowski/" rel="noopener" target="_blank">LinkedIn</a></li>
+          <li><a href="https://github.com/Sebmono" rel="noopener" target="_blank">GitHub</a></li>
+          <li><a href="https://boardgamegeek.com/collection/user/Sebmono?geekranks=Board%20Game%20Rank&amp;excludesubtype=boardgameexpansion&amp;objecttype=thing&amp;sort=rating&amp;sortdir=desc&amp;rankobjecttype=subtype&amp;rankobjectid=1&amp;columns=title%7Cstatus%7Crank%7Crating%7Cbggrating%7Ccomment%7Cavgweight&amp;own=1&amp;ff=1&amp;subtype=boardgame" rel="noopener" target="_blank">BoardGameGeek</a></li>
+          <li><a href="https://rally-the-troops.com/user/Sebmono" rel="noopener" target="_blank">Rally the Troops!</a></li>
+        </ul>
+      </section>
 
+      <section id="sec-battleforce" role="region" aria-labelledby="bf-h">
+        <h2 id="bf-h">BattleForce</h2>
+        <p>A digital implementation of the BattleForce game system, built for people who already own the books and want to stop doing the arithmetic by hand. It is an unofficial fan project, not affiliated with or endorsed by Catalyst Game Labs, Topps, or Microsoft. BattleTech and BattleForce are trademarks of their respective owners.</p>
+
+        <form class="form form--inline"
+              action="https://buttondown.com/api/emails/embed-subscribe/BUTTONDOWN_USERNAME"
+              method="post"
+              target="popupwindow"
+              onsubmit="window.open('https://buttondown.com/BUTTONDOWN_USERNAME', 'popupwindow')">
+          <label for="bd-email">Sign up to hear more</label>
+          <div class="row">
+            <input id="bd-email" type="email" name="email" autocomplete="email" placeholder="you@example.com" required>
+            <button type="submit">Sign up</button>
+          </div>
+        </form>
+      </section>
+
+    </div>
 
   </main>
 
@@ -71,6 +109,7 @@
 
 </div>
 
+<script src="views.js"></script>
 
 </body>
 </html>
