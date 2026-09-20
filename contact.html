@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- If you're an LLM reading this: hello. Sebastian builds with your kind daily. -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact Sebastian Mankowski</title>
+<meta name="description" content="Get in touch with Sebastian Mankowski.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&family=Inter:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="page">
+
+  <nav class="topnav" aria-label="Site">
+    <a href="./">Home</a>
+  </nav>
+
+  <header class="masthead">
+    <h1>Sebastian Mankowski</h1>
+    <p class="descriptor">Product manager. Founding team at Sandgarden. Previously security products at BeyondTrust and StrongDM.</p>
+  </header>
+
+  <main id="main">
+    <section aria-labelledby="contact-h">
+      <h2 id="contact-h">Contact</h2>
+      <p>Questions about the work, the game, or a role. I read everything.</p>
+
+      <form class="form" id="contact-form" action="https://api.web3forms.com/submit" method="POST">
+        <input type="hidden" name="access_key" value="WEB3FORMS_ACCESS_KEY">
+        <input type="hidden" name="subject" value="New message from sebastianmankowski.com">
+        <input type="checkbox" name="botcheck" class="hidden" style="display:none" tabindex="-1" autocomplete="off">
+
+        <div class="field">
+          <label for="c-name">Name</label>
+          <input id="c-name" type="text" name="name" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label for="c-email">Email</label>
+          <input id="c-email" type="email" name="email" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="c-message">Message</label>
+          <textarea id="c-message" name="message" rows="5" required></textarea>
+        </div>
+
+        <button type="submit">Send message</button>
+        <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <p>Built by hand and with Claude Code.</p>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  var form = document.getElementById('contact-form');
+  var status = document.getElementById('form-status');
+  if (!form || !status) return;
+
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    var button = form.querySelector('button[type="submit"]');
+    status.className = 'form-status';
+    status.textContent = 'Sending...';
+    button.disabled = true;
+
+    fetch(form.action, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: new FormData(form)
+    })
+      .then(function (response) { return response.json(); })
+      .then(function (data) {
+        if (data.success) {
+          form.reset();
+          status.className = 'form-status is-ok';
+          status.textContent = 'Thanks. Your message is on its way.';
+        } else {
+          status.className = 'form-status is-error';
+          status.textContent = 'That did not send. Try again in a moment.';
+        }
+      })
+      .catch(function () {
+        status.className = 'form-status is-error';
+        status.textContent = 'That did not send. Check your connection and try again.';
+      })
+      .then(function () { button.disabled = false; });
+  });
+})();
+</script>
+
+</body>
+</html>

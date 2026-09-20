@@ -18,12 +18,16 @@
 
 <div class="page">
 
+  <nav class="topnav" aria-label="Site">
+    <a href="contact.html">Contact me</a>
+  </nav>
+
   <header class="masthead">
     <h1>Sebastian Mankowski</h1>
     <p class="descriptor">Product manager. Founding team at Sandgarden. Previously security products at BeyondTrust and StrongDM.</p>
   </header>
 
-  <main id="main">
+  <main id="main" class="stack">
 
     <section aria-labelledby="now-h">
       <h2 id="now-h">Now</h2>
@@ -36,8 +40,8 @@
       <ul class="links">
         <li><a href="https://www.linkedin.com/in/sebastianmankowski/" rel="noopener" target="_blank">LinkedIn</a></li>
         <li><a href="https://github.com/Sebmono" rel="noopener" target="_blank">GitHub</a></li>
-        <li><a href="https://boardgamegeek.com/collection/user/Sebmono?geekranks=Board%20Game%20Rank&amp;excludesubtype=boardgameexpansion&amp;objecttype=thing&amp;sort=rating&amp;sortdir=desc&amp;rankobjecttype=subtype&amp;rankobjectid=1&amp;columns=title%7Cstatus%7Crank%7Crating%7Cbggrating%7Ccomment%7Cavgweight&amp;own=1&amp;ff=1&amp;subtype=boardgame" rel="noopener" target="_blank">Board game collection</a></li>
-        <li><a href="https://rally-the-troops.com/user/Sebmono" rel="noopener" target="_blank">Rally the Troops</a></li>
+        <li><a href="https://boardgamegeek.com/collection/user/Sebmono?geekranks=Board%20Game%20Rank&amp;excludesubtype=boardgameexpansion&amp;objecttype=thing&amp;sort=rating&amp;sortdir=desc&amp;rankobjecttype=subtype&amp;rankobjectid=1&amp;columns=title%7Cstatus%7Crank%7Crating%7Cbggrating%7Ccomment%7Cavgweight&amp;own=1&amp;ff=1&amp;subtype=boardgame" rel="noopener" target="_blank">BoardGameGeek</a></li>
+        <li><a href="https://rally-the-troops.com/user/Sebmono" rel="noopener" target="_blank">Rally the Troops!</a></li>
       </ul>
     </section>
 
@@ -50,86 +54,23 @@
             method="post"
             target="popupwindow"
             onsubmit="window.open('https://buttondown.com/BUTTONDOWN_USERNAME', 'popupwindow')">
-        <div class="field">
-          <label for="bd-email">Sign up to hear more</label>
+        <label for="bd-email">Sign up to hear more</label>
+        <div class="row">
           <input id="bd-email" type="email" name="email" autocomplete="email" placeholder="you@example.com" required>
+          <button type="submit">Sign up</button>
         </div>
-        <button type="submit">Sign up</button>
       </form>
     </section>
 
-    <section aria-labelledby="contact-h">
-      <h2 id="contact-h">Contact</h2>
-      <p>Questions about the work, the game, or a role. I read everything.</p>
-
-      <form class="form" id="contact-form" action="https://api.web3forms.com/submit" method="POST">
-        <input type="hidden" name="access_key" value="WEB3FORMS_ACCESS_KEY">
-        <input type="hidden" name="subject" value="New message from sebastianmankowski.com">
-        <input type="checkbox" name="botcheck" class="hidden" style="display:none" tabindex="-1" autocomplete="off">
-
-        <div class="field">
-          <label for="c-name">Name</label>
-          <input id="c-name" type="text" name="name" autocomplete="name" required>
-        </div>
-        <div class="field">
-          <label for="c-email">Email</label>
-          <input id="c-email" type="email" name="email" autocomplete="email" required>
-        </div>
-        <div class="field">
-          <label for="c-message">Message</label>
-          <textarea id="c-message" name="message" rows="5" required></textarea>
-        </div>
-
-        <button type="submit">Send message</button>
-        <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
-      </form>
-    </section>
 
   </main>
 
   <footer>
-    <p>Built by hand and with Claude Code. New Jersey.</p>
+    <p>Built by hand and with Claude Code.</p>
   </footer>
 
 </div>
 
-<script>
-(function () {
-  var form = document.getElementById('contact-form');
-  var status = document.getElementById('form-status');
-  if (!form || !status) return;
-
-  form.addEventListener('submit', function (event) {
-    event.preventDefault();
-    var button = form.querySelector('button[type="submit"]');
-    status.className = 'form-status';
-    status.textContent = 'Sending...';
-    button.disabled = true;
-
-    fetch(form.action, {
-      method: 'POST',
-      headers: { 'Accept': 'application/json' },
-      body: new FormData(form)
-    })
-      .then(function (response) { return response.json(); })
-      .then(function (data) {
-        if (data.success) {
-          form.reset();
-          status.className = 'form-status is-ok';
-          status.textContent = 'Thanks. Your message is on its way.';
-        } else {
-          status.className = 'form-status is-error';
-          status.textContent = 'That did not send. Try again in a moment.';
-        }
-      })
-      .catch(function () {
-        status.className = 'form-status is-error';
-        status.textContent = 'That did not send. Check your connection and try again.';
-      })
-      .then(function () { button.disabled = false; });
-  });
-})();
-</script>
 
 </body>
 </html>
