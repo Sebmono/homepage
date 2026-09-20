@@ -12,15 +12,29 @@
   --green:     #5F7F6A;
   --terracotta:#B5654A;
 
+  /* How hard the drawing behind the landing boxes reads, and how much the
+     photograph inside a section is held back from the page white. */
+  --photo-op:  0.17;
+  --shot-op:   1;
+
   --serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --sans:  "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
   --measure: 38rem;
   --gutter: 16px;
+
+  /* The wide frame: the visual view's box row, and what the top nav aligns to. */
+  --wide:  53rem;                         /* ~1.4x the text measure */
+  --row-w: min(var(--wide), calc(100vw - 2 * var(--gutter)));
 }
 
+/*
+  Dark tokens apply when the reader has picked Dark, or when they are on System
+  (no data-theme attribute) and the OS says dark. The two blocks are identical;
+  they are written out twice rather than nested so the file stays plain CSS.
+*/
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg:        #1E1B18;
     --bg-sunk:   #262220;
     --ink:       #E7E0D6;
@@ -31,7 +45,26 @@
     --red:       #D07A64;
     --green:     #8FB39A;
     --terracotta:#CE8267;
+
+    --photo-op:  0.23;
+    --shot-op:   0.86;
   }
+}
+
+:root[data-theme="dark"] {
+  --bg:        #1E1B18;
+  --bg-sunk:   #262220;
+  --ink:       #E7E0D6;
+  --ink-muted: #A79C90;
+  --hairline:  #3B352F;
+
+  --brass:     #C9A876;
+  --red:       #D07A64;
+  --green:     #8FB39A;
+  --terracotta:#CE8267;
+
+  --photo-op:  0.23;
+  --shot-op:   0.86;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -58,15 +91,64 @@ body {
 
 /* ---- Top nav ------------------------------------------------------- */
 
+/* The nav hangs on the wide frame, not the text measure, so it lines up with
+   the right edge of the visual view's boxes in both views and on contact.html.
+   Same centring trick as the box row: half the text column, then back by half
+   of itself. Below the breakpoints both widths collapse to the gutter. */
 .topnav {
+  width: var(--row-w);
+  margin: -3.2rem 0 2.2rem 50%;
+  transform: translateX(-50%);
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
-  margin: -3.2rem 0 2.2rem;
+  gap: 0.45rem 1.2rem;
   font-size: 0.94rem;
 }
 
 .topnav a { text-decoration: none; color: var(--ink-muted); }
 .topnav a:hover, .topnav a:focus-visible { color: var(--red); }
+
+/* ---- Theme control -------------------------------------------------- */
+
+/* Three options in one hairline frame. The current one carries the small brass
+   square used for the open tab. Unhidden by theme.js; without JavaScript it
+   would do nothing, so it stays out of the page. */
+.themes {
+  display: flex;
+  border: 1px solid var(--hairline);
+}
+
+.themes button {
+  position: relative;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--ink-muted);
+  background: transparent;
+  border: 0;
+  border-left: 1px solid var(--hairline);
+  padding: 0.68rem 0.55rem 0.4rem;
+  cursor: pointer;
+}
+
+.themes button:first-child { border-left: 0; }
+.themes button:hover { color: var(--red); }
+
+.themes button[aria-pressed="true"] { color: var(--ink); }
+
+.themes button[aria-pressed="true"]::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  background: var(--brass);
+}
 
 /* ---- Masthead ------------------------------------------------------ */
 
@@ -112,7 +194,7 @@ main section {
 
 main section:last-child { margin-bottom: 0; }
 
-/* Home, simple view: the three sections share one fixed height, set by the tallest. */
+/* Home, linear view: the three sections share one fixed height, set by the tallest. */
 .pane {
   display: grid;
   grid-auto-rows: 1fr;
@@ -173,6 +255,28 @@ ul.links li:last-child { border-bottom: 0; }
 ul.links a { text-decoration: none; display: inline-block; }
 ul.links a:hover,
 ul.links a:focus-visible { color: var(--red); }
+
+/* ---- Photograph in a section ---------------------------------------- */
+
+.shot {
+  margin: 1.4rem 0 0;
+  max-width: 28rem;
+}
+
+.shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--hairline);
+  opacity: var(--shot-op);
+}
+
+.shot figcaption {
+  margin-top: 0.45rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--ink-muted);
+}
 
 /* ---- Forms --------------------------------------------------------- */
 
@@ -284,20 +388,20 @@ footer p {
 
 @media (max-width: 30rem) {
   .page { padding-top: 3.5rem; }
-  .topnav { margin-top: -1.6rem; }
+  .topnav { margin: -1.6rem 0 2.2rem 50%; }
   h2::before { left: 0; }
 }
 
 /* =====================================================================
-   Fun view
+   Visual view
    =====================================================================
 
-   Added by views.js as class "fun" on <body>; data-open names the section
+   Added by views.js as class "visual" on <body>; data-open names the section
    that is showing. Without JavaScript none of this applies and the page is
-   the simple view. Everything below is scoped to body.fun so the simple
+   the linear view. Everything below is scoped to body.visual so the linear
    view and contact.html are untouched.
 
-   Landing   three square boxes across a wider-than-measure row
+   Landing   three square boxes across the wide frame
    Open      the boxes become 3.5rem vertical tabs and the chosen section
              sits between them at the normal 38rem measure
 
@@ -306,23 +410,20 @@ footer p {
    and it stays seamless because the text pane grows out of zero width.
    --------------------------------------------------------------------- */
 
-body.fun {
-  --fun-w:   53rem;                       /* ~1.4x the 38rem text measure */
+body.visual {
   --box-gap: 0.85rem;
   --tab-w:   3.5rem;
-  --open-h:  24rem;
+  --open-h:  28.5rem;
   --dur:     450ms;
-  --box-w:   calc((min(var(--fun-w), 100vw - 2 * var(--gutter)) - 2 * var(--box-gap)) / 3);
+  --box-w:   calc((var(--row-w) - 2 * var(--box-gap)) / 3);
 }
 
-.topnav { gap: 1.2rem; }
-
-body:not(.fun) .boxes { display: none; }
+body:not(.visual) .boxes { display: none; }
 
 /* ---- The row ------------------------------------------------------- */
 
-body.fun #main {
-  width: min(var(--fun-w), calc(100vw - 2 * var(--gutter)));
+body.visual #main {
+  width: var(--row-w);
   margin-left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -332,21 +433,19 @@ body.fun #main {
   transition: height var(--dur) ease-in-out;
 }
 
-body.fun[data-open] #main { height: var(--open-h); }
+body.visual[data-open] #main { height: var(--open-h); }
 
 /* The wrapper exists for the mobile layout; on wide screens the three
    buttons need to be flex children of <main> itself. */
-body.fun .boxes { display: contents; }
+body.visual .boxes { display: contents; }
 
 /* ---- Boxes and tabs ------------------------------------------------ */
 
-body.fun .box {
+body.visual .box {
   position: relative;
   flex: 1 1 0;
   min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   padding: 0;
   background: transparent;
   border: 1px solid var(--brass);
@@ -360,20 +459,27 @@ body.fun .box {
     border-color 200ms ease;
 }
 
-body.fun .box:focus-visible { outline-offset: -4px; }
-body.fun .box:hover { border-color: var(--brass); }
+body.visual .box:focus-visible { outline-offset: -4px; }
 
-body.fun[data-open] .box { flex: 0 0 var(--tab-w); }
+/* Hover and focus take the border and the label together. */
+body.visual .box:hover,
+body.visual .box:focus-visible { border-color: var(--red); }
+
+body.visual .box:hover .box-label,
+body.visual .box:focus-visible .box-label { color: var(--red); }
+
+body.visual[data-open] .box { flex: 0 0 var(--tab-w); }
 
 /* Unselected tabs step back; the selected one holds full brass and gets the
    small square marker, an echo of the stepped joint under the name. */
-body.fun[data-open] .box:not(.is-open) {
+body.visual[data-open] .box:not(.is-open) {
   border-color: color-mix(in srgb, var(--brass) 45%, transparent);
 }
 
-body.fun .box.is-open::before {
+body.visual .box.is-open::before {
   content: "";
   position: absolute;
+  z-index: 2;
   top: 8px;
   left: 50%;
   width: 6px;
@@ -384,9 +490,42 @@ body.fun .box.is-open::before {
 
 /* ---- Labels -------------------------------------------------------- */
 
-body.fun .box-label {
-  position: relative;
+/*
+  Two labels sit on top of each other: the horizontal one with its teaser, and
+  a vertical duplicate for the tab state. Rotating one element would hard-cut
+  between writing modes, so they cross-fade over the same duration as the
+  box geometry. The duplicate is aria-hidden.
+*/
+body.visual .box-face,
+body.visual .box-label--v {
+  position: absolute;
+  inset: 0;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity var(--dur) ease-in-out;
+}
+
+body.visual .box-face {
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0 0.7rem;
+  opacity: 1;
+}
+
+body.visual .box-label--v {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);              /* reads bottom to top */
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+  opacity: 0;
+}
+
+body.visual[data-open] .box-face     { opacity: 0; }
+body.visual[data-open] .box-label--v { opacity: 1; }
+
+body.visual .box-label {
   font-family: var(--sans);
   font-weight: 500;
   font-size: clamp(1.1rem, 2.9vw, 1.7rem);
@@ -396,39 +535,43 @@ body.fun .box-label {
   transition: color 200ms ease;
 }
 
-body.fun[data-open] .box-label {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);              /* reads bottom to top */
-  font-size: 1rem;
-  letter-spacing: 0.01em;
+body.visual .box.is-open .box-label { color: var(--ink); }
+
+body.visual .box-teaser {
+  font-size: 0.78rem;
+  line-height: 1.3;
+  letter-spacing: 0;
+  color: var(--ink-muted);
+  text-align: center;
+  max-width: 100%;
 }
 
-body.fun .box:hover .box-label { color: var(--ink); }
-body.fun .box.is-open .box-label { color: var(--ink); }
+/* ---- The drawing behind the boxes ----------------------------------- */
 
-/* ---- Background photographs ---------------------------------------- */
-
-body.fun .box::after {
+/*
+  One photograph runs across all three boxes: each box paints the same image
+  at the full row width and shifts it left by its own index, so the gaps read
+  as cuts through a single picture rather than three separate pictures.
+*/
+body.visual .box::after {
   content: "";
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-size: cover;
-  background-position: center;
-  filter: grayscale(1) sepia(0.35) contrast(1.04);
-  opacity: 0.18;
+  background-image: url("img/scarpa-wide.jpg");
+  background-repeat: no-repeat;
+  background-size: var(--row-w) auto;
+  background-position: calc(-1 * var(--i) * (var(--box-w) + var(--box-gap))) center;
+  filter: grayscale(1) contrast(1.12);
+  opacity: var(--photo-op);
   transition: opacity 250ms ease;
 }
 
-body.fun[data-open] .box::after { opacity: 0; }
+body.visual[data-open] .box::after { opacity: 0; }
 
-#box-now::after         { background-image: url("img/scarpa-1.jpg"); }
-#box-elsewhere::after   { background-image: url("img/scarpa-2.jpg"); }
-#box-battleforce::after { background-image: url("img/scarpa-3.jpg"); }
-
-@media (prefers-color-scheme: dark) {
-  body.fun .box::after { opacity: 0.22; }
-}
+#box-now         { --i: 0; }
+#box-elsewhere   { --i: 1; }
+#box-battleforce { --i: 2; }
 
 /* ---- Text pane ----------------------------------------------------- */
 
@@ -437,13 +580,13 @@ body.fun[data-open] .box::after { opacity: 0; }
 #box-now         { order: 1; }
 #box-elsewhere   { order: 2; }
 #box-battleforce { order: 3; }
-body.fun .pane   { order: 4; }
+body.visual .pane   { order: 4; }
 
-body.fun[data-open="now"]       #box-elsewhere   { order: 6; }
-body.fun[data-open="now"]       #box-battleforce { order: 7; }
-body.fun[data-open="elsewhere"] #box-battleforce { order: 7; }
+body.visual[data-open="now"]       #box-elsewhere   { order: 6; }
+body.visual[data-open="now"]       #box-battleforce { order: 7; }
+body.visual[data-open="elsewhere"] #box-battleforce { order: 7; }
 
-body.fun .pane {
+body.visual .pane {
   display: block;
   flex: 0 1 0;
   min-width: 0;
@@ -458,7 +601,7 @@ body.fun .pane {
     opacity    200ms ease 250ms;
 }
 
-body.fun[data-open] .pane {
+body.visual[data-open] .pane {
   flex: 1 1 0;
   opacity: 1;
   margin-inline-start: 0;
@@ -467,15 +610,15 @@ body.fun[data-open] .pane {
 }
 
 /* The exposed rule over each h2 runs out to the left of the text block. In the
-   fun view there is a tab sitting there, so pull it back in. */
-body.fun .pane h2::before { left: 0; }
+   visual view there is a tab sitting there, so pull it back in. */
+body.visual .pane h2::before { left: 0; }
 
-body.fun .pane section { margin: 0; }
+body.visual .pane section { margin: 0; }
 
 /* ---- Mobile: bars in the landing state, a strip of tabs when open ---- */
 
 @media (max-width: 40rem) {
-  body.fun #main {
+  body.visual #main {
     width: 100%;
     margin-left: 0;
     transform: none;
@@ -484,34 +627,42 @@ body.fun .pane section { margin: 0; }
     height: auto;
   }
 
-  body.fun .boxes {
+  body.visual .boxes {
     display: flex;
     flex-direction: column;
     gap: var(--box-gap);
     order: 1;
   }
 
-  body.fun .box,
-  body.fun[data-open] .box { flex: 0 0 auto; height: 7rem; }
+  body.visual .box,
+  body.visual[data-open] .box { flex: 0 0 auto; height: 7rem; }
 
-  body.fun[data-open] .boxes { flex-direction: row; }
-  body.fun[data-open] .box { flex: 1 1 0; height: 2.9rem; }
+  body.visual[data-open] .boxes { flex-direction: row; }
+  body.visual[data-open] .box { flex: 1 1 0; height: 2.9rem; }
 
-  body.fun[data-open] .box-label {
-    writing-mode: horizontal-tb;
-    transform: none;
-    font-size: 0.95rem;
+  /* Stacked bars cannot read as one continuous picture, so each takes a
+     third of the image across. */
+  body.visual .box::after {
+    background-size: 300% auto;
+    background-position: calc(var(--i) * 50%) center;
   }
 
-  body.fun .pane,
-  body.fun[data-open] .pane {
+  /* The tab strip runs horizontally here, so the horizontal label stays and
+     the vertical duplicate never appears. */
+  body.visual[data-open] .box-face { opacity: 1; }
+  body.visual[data-open] .box-label--v { opacity: 0; }
+  body.visual[data-open] .box-label { font-size: 0.95rem; }
+  body.visual[data-open] .box-teaser { display: none; }
+
+  body.visual .pane,
+  body.visual[data-open] .pane {
     flex: 0 1 auto;
     margin-inline-start: 0;
     overflow: visible;
     padding-inline: 0;
   }
 
-  body.fun[data-open] .pane { margin-top: 1.8rem; }
+  body.visual[data-open] .pane { margin-top: 1.8rem; }
 }
 
 /* ---- Motion -------------------------------------------------------- */
@@ -522,9 +673,11 @@ body.no-anim *::before,
 body.no-anim *::after { transition: none !important; }
 
 @media (prefers-reduced-motion: reduce) {
-  body.fun #main,
-  body.fun .box,
-  body.fun .box::after,
-  body.fun .box-label,
-  body.fun .pane { transition: none; }
+  body.visual #main,
+  body.visual .box,
+  body.visual .box::after,
+  body.visual .box-face,
+  body.visual .box-label,
+  body.visual .box-label--v,
+  body.visual .pane { transition: none; }
 }

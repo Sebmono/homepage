@@ -7,6 +7,8 @@
 <title>Sebastian Mankowski</title>
 <meta name="description" content="Product manager. Founding team at Sandgarden. Previously security products at BeyondTrust and StrongDM.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<!-- Theme before first paint, so a dark reader never sees a flash of plaster. -->
+<script>try{var t=localStorage.getItem('sm-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&family=Inter:wght@400;500&display=swap">
@@ -15,19 +17,14 @@
 <body>
 
 <!--
-  Image credits (also in README.md). All Creative Commons Attribution, via Wikimedia Commons.
+  Image credits (also in README.md).
 
-  img/scarpa-1.jpg  "Carlo Scarpa, architect: the Cangrande space, Castelvecchio Museum,
-                    Verona 1956-1973" by seier+seier. CC BY 2.0.
-                    https://commons.wikimedia.org/wiki/File:Carlo_scarpa,_architect-_the_cangrande_space,_castelvecchio_museum,_verona_1956-1973_(31252404523).jpg
+  img/scarpa-wide.jpg  "Palazzo Querini Stampalia, piano terra e giardino di Carlo Scarpa"
+                       by Sailko. CC BY 3.0. Cropped to 3:1, desaturated, recompressed.
+                       https://commons.wikimedia.org/wiki/File:Palazzo_querini_stampalia,_piano_terra_e_giardino_di_carlo_scarpa_01.jpg
 
-  img/scarpa-2.jpg  "Palazzo Querini Stampalia, piano terra e giardino di Carlo Scarpa"
-                    by Sailko. CC BY 3.0.
-                    https://commons.wikimedia.org/wiki/File:Palazzo_querini_stampalia,_piano_terra_e_giardino_di_carlo_scarpa_09.jpg
-
-  img/scarpa-3.jpg  "Olivetti Exhibition centre by Carlo Scarpa, St Mark's Square, Venice,
-                    Italy" by fusion-of-horizons. CC BY 2.0.
-                    https://commons.wikimedia.org/wiki/File:Olivetti_Exhibition_centre_by_Carlo_Scarpa,_St_Mark%27s_Square,_Venice,_Italy.jpg
+  img/pax-pamir.jpg    Pax Pamir, second edition, mid-game. Supplied by the site owner;
+                       desaturated and cropped to 2.6:1.
 -->
 
 <a class="skip" href="#main">Skip to content</a>
@@ -35,8 +32,14 @@
 <div class="page">
 
   <nav class="topnav" aria-label="Site">
-    <!-- Unhidden by views.js. Without JavaScript the page is the simple view only. -->
-    <a class="viewtoggle" id="view-toggle" href="?view=simple" hidden>Simple view</a>
+    <!-- Both controls are unhidden by script. Without JavaScript the page is the
+         linear view at the reader's system theme. -->
+    <div class="themes" id="themes" role="group" aria-label="Color theme" hidden>
+      <button type="button" data-theme-set="light" aria-pressed="false">Light</button>
+      <button type="button" data-theme-set="dark" aria-pressed="false">Dark</button>
+      <button type="button" data-theme-set="system" aria-pressed="false">System</button>
+    </div>
+    <a class="viewtoggle" id="view-toggle" href="?view=linear" hidden>Linear</a>
     <a href="contact.html">Contact me</a>
   </nav>
 
@@ -47,20 +50,32 @@
 
   <main id="main">
 
-    <!-- display:contents in the fun view, so the three buttons become direct flex
+    <!-- display:contents in the visual view, so the three buttons become direct flex
          children of <main> and can be ordered around the text pane. -->
     <div class="boxes">
       <button type="button" class="box" id="box-now"
               aria-expanded="false" aria-controls="sec-now" hidden>
-        <span class="box-label">now</span>
+        <span class="box-face">
+          <span class="box-label">now</span>
+          <span class="box-teaser">Sandgarden, Doc Holiday, Featurette</span>
+        </span>
+        <span class="box-label box-label--v" aria-hidden="true">now</span>
       </button>
       <button type="button" class="box" id="box-elsewhere"
               aria-expanded="false" aria-controls="sec-elsewhere" hidden>
-        <span class="box-label">elsewhere</span>
+        <span class="box-face">
+          <span class="box-label">elsewhere</span>
+          <span class="box-teaser">GitHub, LinkedIn, games</span>
+        </span>
+        <span class="box-label box-label--v" aria-hidden="true">elsewhere</span>
       </button>
       <button type="button" class="box" id="box-battleforce"
               aria-expanded="false" aria-controls="sec-battleforce" hidden>
-        <span class="box-label">battleforce</span>
+        <span class="box-face">
+          <span class="box-label">battleforce</span>
+          <span class="box-teaser">fan project</span>
+        </span>
+        <span class="box-label box-label--v" aria-hidden="true">battleforce</span>
       </button>
     </div>
 
@@ -80,6 +95,10 @@
           <li><a href="https://boardgamegeek.com/collection/user/Sebmono?geekranks=Board%20Game%20Rank&amp;excludesubtype=boardgameexpansion&amp;objecttype=thing&amp;sort=rating&amp;sortdir=desc&amp;rankobjecttype=subtype&amp;rankobjectid=1&amp;columns=title%7Cstatus%7Crank%7Crating%7Cbggrating%7Ccomment%7Cavgweight&amp;own=1&amp;ff=1&amp;subtype=boardgame" rel="noopener" target="_blank">BoardGameGeek</a></li>
           <li><a href="https://rally-the-troops.com/user/Sebmono" rel="noopener" target="_blank">Rally the Troops!</a></li>
         </ul>
+        <figure class="shot">
+          <img src="img/pax-pamir.jpg" alt="Pax Pamir board mid-game" width="1400" height="538" loading="lazy" decoding="async">
+          <figcaption>Pax Pamir, second edition. Yes, it is that good.</figcaption>
+        </figure>
       </section>
 
       <section id="sec-battleforce" role="region" aria-labelledby="bf-h">
@@ -109,6 +128,7 @@
 
 </div>
 
+<script src="theme.js"></script>
 <script src="views.js"></script>
 
 </body>

@@ -1,17 +1,19 @@
 /*
   Two views of the same page.
 
-  Simple view  the plain stack of sections. This is what the markup renders on its own,
+  Linear view  the plain stack of sections. This is what the markup renders on its own,
                so the page still works with JavaScript off.
-  Fun view     added by putting the class "fun" on <body>. Three big boxes; picking one
-               collapses all three into vertical tabs and opens that section between them.
+  Visual view  added by putting the class "visual" on <body>. Three big boxes; picking
+               one collapses all three into vertical tabs and opens that section between
+               them.
 
   State lives in two attributes on <body>:
-    class="fun"        which view we are in
+    class="visual"     which view we are in
     data-open="now"    which section is open (absent = the landing state)
 
-  Choice order: ?view= / #hash in the URL, then localStorage, then fun view by default.
-  Deep links: ?view=fun&open=elsewhere, ?view=simple, #simple, #fun.
+  Choice order: ?view= / #hash in the URL, then localStorage, then visual by default.
+  Deep links: ?view=visual&open=elsewhere, ?view=linear, #linear, #visual. The older
+  names fun and simple are still accepted everywhere a view name is read.
 */
 (function () {
   'use strict';
@@ -29,49 +31,60 @@
 
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+  /* ---- names -------------------------------------------------------- */
+
+  // "fun" and "simple" were the first names for these views; old links and old
+  // stored values still resolve.
+  function named(value) {
+    if (value === 'linear' || value === 'simple') { return 'linear'; }
+    if (value === 'visual' || value === 'fun') { return 'visual'; }
+    return null;
+  }
+
   /* ---- persistence ------------------------------------------------- */
 
-  function remember(view) {
-    try { localStorage.setItem(STORE, view); } catch (e) { /* private mode, ignore */ }
+  function remember(v) {
+    try { localStorage.setItem(STORE, v); } catch (e) { /* private mode, ignore */ }
   }
 
   function remembered() {
-    try { return localStorage.getItem(STORE); } catch (e) { return null; }
+    try { return named(localStorage.getItem(STORE)); } catch (e) { return null; }
   }
 
   /* ---- render ------------------------------------------------------ */
 
-  var view = 'fun';
+  var view = 'visual';
   var open = null;
 
   function render() {
-    var fun = view === 'fun';
+    var visual = view === 'visual';
 
-    body.classList.toggle('fun', fun);
-    if (fun && open) { body.setAttribute('data-open', open); }
+    body.classList.toggle('visual', visual);
+    if (visual && open) { body.setAttribute('data-open', open); }
     else { body.removeAttribute('data-open'); }
 
     boxes.forEach(function (box, i) {
-      box.hidden = !fun;
-      var on = fun && open === KEYS[i];
+      box.hidden = !visual;
+      var on = visual && open === KEYS[i];
       box.setAttribute('aria-expanded', on ? 'true' : 'false');
       box.classList.toggle('is-open', on);
     });
 
-    // Simple view shows every section. Fun view shows the open one, or none.
+    // Linear view shows every section. Visual view shows the open one, or none.
     sections.forEach(function (section, i) {
-      section.hidden = fun && open !== KEYS[i];
+      section.hidden = visual && open !== KEYS[i];
     });
 
+    // The link names the view it takes you to, not the one you are in.
     toggle.hidden = false;
-    toggle.textContent = fun ? 'Simple view' : 'Fun view';
-    toggle.href = fun ? '?view=simple' : '?view=fun';
+    toggle.textContent = visual ? 'Linear' : 'Visual';
+    toggle.href = visual ? '?view=linear' : '?view=visual';
 
     try {
       var url = new URL(window.location.href);
       url.hash = '';
       url.searchParams.set('view', view);
-      if (fun && open) { url.searchParams.set('open', open); }
+      if (visual && open) { url.searchParams.set('open', open); }
       else { url.searchParams.delete('open'); }
       history.replaceState(null, '', url.pathname + url.search);
     } catch (e) { /* no history API, ignore */ }
@@ -105,8 +118,8 @@
   }
 
   function setView(next) {
-    view = next === 'simple' ? 'simple' : 'fun';
-    if (view === 'simple') { open = null; }
+    view = named(next) || 'visual';
+    if (view === 'linear') { open = null; }
     remember(view);
     render();
   }
@@ -138,20 +151,18 @@
 
   toggle.addEventListener('click', function (event) {
     event.preventDefault();
-    setView(view === 'fun' ? 'simple' : 'fun');
+    setView(view === 'visual' ? 'linear' : 'visual');
   });
 
   /* ---- start -------------------------------------------------------- */
 
   var params = new URLSearchParams(window.location.search);
-  var hash = window.location.hash.replace('#', '');
-  var asked = params.get('view') || (hash === 'simple' || hash === 'fun' ? hash : null);
+  var asked = named(params.get('view')) || named(window.location.hash.replace('#', ''));
 
-  view = asked || remembered() || 'fun';
-  if (view !== 'simple') { view = 'fun'; }
+  view = asked || remembered() || 'visual';
 
   var wanted = params.get('open');
-  if (view === 'fun' && KEYS.indexOf(wanted) > -1) { open = wanted; }
+  if (view === 'visual' && KEYS.indexOf(wanted) > -1) { open = wanted; }
 
   // Only animate once the first paint has settled.
   body.classList.add('no-anim');

@@ -7,8 +7,9 @@ libraries. Everything that gets served lives at the repo root.
 index.html     the page
 contact.html   the contact form
 style.css      all styles, light and dark
-views.js       the simple/fun view toggle on the home page
-img/           Scarpa photographs used behind the fun view boxes
+views.js       the linear/visual view toggle on the home page
+theme.js       the Light / Dark / System control in the top nav
+img/           the Scarpa drawing behind the landing boxes, and the Pax Pamir photograph
 favicon.svg    SM monogram
 _headers       security headers for Cloudflare Pages
 _redirects     301 from www to the apex domain
@@ -19,66 +20,100 @@ Built with Claude Code.
 ## The two views
 
 The home page renders two ways at the same URL. A link in the top-right nav switches
-between them.
+between them. The link names the view it takes you to, not the one you are in.
 
-**Simple view** is the plain stack: masthead, then Now, Elsewhere and BattleForce at equal
+**Linear view** is the plain stack: masthead, then Now, Elsewhere and BattleForce at equal
 heights. It is what the HTML renders on its own, so it is also what you get with
 JavaScript off.
 
-**Fun view** is the default. Three square boxes sit below the masthead, each with a Scarpa
-photograph behind its label. Picking one collapses all three into narrow vertical tabs and
+**Visual view** is the default. Three square boxes sit below the masthead, each with a
+large lowercase label, a one-line teaser, and its own slice of a single Scarpa photograph
+running across all three. Picking one collapses all three into narrow vertical tabs and
 opens that section's text between them: the tabs up to and including the selected one stay
 on the left, the rest move to the right. Click the open tab again, or press Escape, to go
 back to the three boxes. Arrow keys move between the tabs.
 
-`views.js` adds the class `fun` to `<body>` and sets `data-open` to the section name;
+Each box carries two labels, one horizontal and one vertical, and they cross-fade as the
+box becomes a tab; the vertical one is `aria-hidden`.
+
+`views.js` adds the class `visual` to `<body>` and sets `data-open` to the section name;
 everything else is CSS. The choice is stored in `localStorage` under `sm-view`.
 
 ### Linking to a view
 
 | URL | Result |
 | --- | --- |
-| `/` | whatever was last chosen, fun view by default |
-| `/?view=simple` or `/#simple` | simple view |
-| `/?view=fun` or `/#fun` | fun view, landing state |
-| `/?view=fun&open=now` | fun view with Now open |
-| `/?view=fun&open=elsewhere` | fun view with Elsewhere open |
-| `/?view=fun&open=battleforce` | fun view with BattleForce open |
+| `/` | whatever was last chosen, visual view by default |
+| `/?view=linear` or `/#linear` | linear view |
+| `/?view=visual` or `/#visual` | visual view, landing state |
+| `/?view=visual&open=now` | visual view with Now open |
+| `/?view=visual&open=elsewhere` | visual view with Elsewhere open |
+| `/?view=visual&open=battleforce` | visual view with BattleForce open |
+
+The views were first called fun and simple. Those names are still accepted wherever a view
+name is read, so `?view=fun`, `#simple` and older stored values keep working.
 
 A `?view=` or `#` in the URL wins over the stored choice for that visit but does not
 overwrite it. Only using the nav link changes what is stored.
 
-### Swapping the images
+## The theme control
 
-The three photographs are `img/scarpa-1.jpg` (now), `img/scarpa-2.jpg` (elsewhere) and
-`img/scarpa-3.jpg` (battleforce), wired up at the bottom of the fun view block in
-`style.css`:
+Three options in the top-right nav: Light, Dark, System. The choice sets `data-theme` on
+`<html>` (`light`, `dark`, or no attribute at all for System) and is stored in
+`localStorage` under `sm-theme`. A three-line inline script in the `<head>` of both pages
+applies it before the first paint, so switching to Dark and reloading never flashes the
+light background.
+
+Dark tokens are declared twice in `style.css`: once under
+`@media (prefers-color-scheme: dark)` scoped to `:root:not([data-theme="light"])`, and once
+under `:root[data-theme="dark"]`. Keep the two blocks in step when changing a colour.
+
+The control is hidden in the markup and unhidden by `theme.js`, so with JavaScript off the
+page simply follows the system setting.
+
+## The nav frame
+
+The top nav is not on the 38rem text measure. It is the width of `--row-w`, the same wide
+frame the visual view's box row uses, so its right edge lines up with the right edge of the
+boxes in both views and on `contact.html`. Below about 40rem both collapse to the 16px
+gutter.
+
+## Swapping the images
+
+`img/scarpa-wide.jpg` is one photograph cut across the three landing boxes. Each box paints
+the whole image at the row width and shifts it left by its own index (`--i` on the box),
+so the gaps read as cuts through one picture:
 
 ```css
-#box-now::after         { background-image: url("img/scarpa-1.jpg"); }
-#box-elsewhere::after   { background-image: url("img/scarpa-2.jpg"); }
-#box-battleforce::after { background-image: url("img/scarpa-3.jpg"); }
+body.visual .box::after {
+  background-image: url("img/scarpa-wide.jpg");
+  background-size: var(--row-w) auto;
+  background-position: calc(-1 * var(--i) * (var(--box-w) + var(--box-gap))) center;
+}
 ```
 
-To change one, drop a replacement in at the same filename. Keep them around 1400px wide
-and under 250KB; `sips -s format jpeg -s formatOptions 60 -Z 1400 in.jpg --out out.jpg`
-does both. They are cropped with `object-fit`-style `background-size: cover`, desaturated
-and held at 18% opacity (22% in dark mode) by the `.box::after` rule, so anything with a
-legible large-scale structure works. Update the credits below and the comment at the top
-of `index.html` when you swap one.
+A replacement wants to be about 3:1, around 1600px wide, under 300KB, and to have legible
+large-scale horizontal structure, since it is held at 17% opacity (23% in dark mode) and
+desaturated by the `.box::after` rule. Stacked bars on mobile cannot read as one picture,
+so there each bar takes a third of the image across instead.
+
+`img/pax-pamir.jpg` sits under the links in the Elsewhere section. It is what fills the
+space the shared fixed section height would otherwise leave empty, so if you swap it for
+something a different shape, check both views: `--open-h` in `body.visual` is sized to the
+tallest section, and in the linear view every section grows to match.
+
+Update the credits below and the comment at the top of `index.html` when you swap either.
 
 ## Image credits
 
-All three are Creative Commons Attribution, from Wikimedia Commons.
-
 | File | Work | Author | License |
 | --- | --- | --- | --- |
-| `img/scarpa-1.jpg` | [Carlo Scarpa, architect: the Cangrande space, Castelvecchio Museum, Verona 1956-1973](https://commons.wikimedia.org/wiki/File:Carlo_scarpa,_architect-_the_cangrande_space,_castelvecchio_museum,_verona_1956-1973_(31252404523).jpg) | seier+seier | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/) |
-| `img/scarpa-2.jpg` | [Palazzo Querini Stampalia, piano terra e giardino di Carlo Scarpa](https://commons.wikimedia.org/wiki/File:Palazzo_querini_stampalia,_piano_terra_e_giardino_di_carlo_scarpa_09.jpg) | Sailko | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) |
-| `img/scarpa-3.jpg` | [Olivetti Exhibition centre by Carlo Scarpa, St Mark's Square, Venice, Italy](https://commons.wikimedia.org/wiki/File:Olivetti_Exhibition_centre_by_Carlo_Scarpa,_St_Mark%27s_Square,_Venice,_Italy.jpg) | fusion-of-horizons | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/) |
+| `img/scarpa-wide.jpg` | [Palazzo Querini Stampalia, piano terra e giardino di Carlo Scarpa](https://commons.wikimedia.org/wiki/File:Palazzo_querini_stampalia,_piano_terra_e_giardino_di_carlo_scarpa_01.jpg), via Wikimedia Commons | Sailko | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) |
+| `img/pax-pamir.jpg` | Pax Pamir, second edition, mid-game | the site owner | own photograph |
 
-Each has been resized to 1400px wide and recompressed. The same credits are repeated in an
-HTML comment at the top of `index.html` so they travel with the page.
+The Scarpa photograph has been cropped to 3:1, desaturated and recompressed; the Pax Pamir
+photograph cropped to 2.6:1, desaturated and recompressed. The same credits are repeated in
+an HTML comment at the top of `index.html` so they travel with the page.
 
 ## Placeholders to fill before going live
 

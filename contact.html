@@ -7,6 +7,8 @@
 <title>Contact Sebastian Mankowski</title>
 <meta name="description" content="Get in touch with Sebastian Mankowski.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<!-- Theme before first paint, so a dark reader never sees a flash of plaster. -->
+<script>try{var t=localStorage.getItem('sm-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&family=Inter:wght@400;500&display=swap">
@@ -19,6 +21,12 @@
 <div class="page">
 
   <nav class="topnav" aria-label="Site">
+    <!-- Unhidden by theme.js; without JavaScript the page follows the system theme. -->
+    <div class="themes" id="themes" role="group" aria-label="Color theme" hidden>
+      <button type="button" data-theme-set="light" aria-pressed="false">Light</button>
+      <button type="button" data-theme-set="dark" aria-pressed="false">Dark</button>
+      <button type="button" data-theme-set="system" aria-pressed="false">System</button>
+    </div>
     <a href="./">Home</a>
   </nav>
 
@@ -61,6 +69,8 @@
   </footer>
 
 </div>
+
+<script src="theme.js"></script>
 
 <script>
 (function () {
