@@ -832,7 +832,12 @@ html[data-vt="close"]::view-transition-image-pair(box-battleforce) {
 */
 ::view-transition-group(root) { animation: none; }
 
-::view-transition-old(root),
+/* The old page snapshot is not shown at all. Left in place at full opacity
+   it ghosts through in Firefox (labels at their old tab positions faintly
+   visible under the live page), which read as labels blinking and
+   teleporting. The new image is the live page, so only that is drawn. */
+::view-transition-old(root) { display: none; }
+
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
@@ -840,6 +845,7 @@ html[data-vt="close"]::view-transition-image-pair(box-battleforce) {
   height: auto;
   object-fit: fill;
 }
+::view-transition-image-pair(root) { isolation: auto; }
 
 /* ---- Linear <-> visual ---------------------------------------------- */
 
