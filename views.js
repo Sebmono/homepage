@@ -107,19 +107,39 @@
     animation path. The OS reduced-motion preference is deliberately ignored:
     the owner wants the morph to run for everyone.
   */
-  function morph(change) {
+  function morph(change, kind) {
     if (document.startViewTransition && !body.classList.contains('no-anim')) {
-      // A hidden tab aborts the transition; the state change still applies,
-      // so the rejection is noise.
       // While the morph runs the boxes drop their own border and the
       // ::view-transition-group pseudo draws it instead. A border baked into
       // the two snapshots would only cross-fade (square fading out, tab fading
       // in); on the group it is a real box that changes shape.
       body.classList.add('morphing');
+      // A view swap (linear <-> visual) is a plain in-place cross-fade; the
+      // stylesheet reads this attribute off <html> to stop the groups moving.
+      if (kind === 'swap') { document.documentElement.setAttribute('data-vt', 'swap'); }
+
       var t = document.startViewTransition(change);
       var quiet = function () {};
-      t.ready.catch(quiet);
-      t.finished.catch(quiet).then(function () { body.classList.remove('morphing'); });
+
+      // Hand the border back to the boxes one frame before the pseudo tree is
+      // torn down, with the fade suppressed, so nothing blinks at the seam.
+      // (A hidden tab aborts the transition; ready rejects and that is noise.)
+      t.ready.then(function () {
+        var ms = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dur')) || 450;
+        setTimeout(settle, Math.max(0, ms - 32));
+      }, quiet);
+      t.finished.catch(quiet).then(settle);
+
+      function settle() {
+        if (!body.classList.contains('morphing')) { return; }
+        boxes.forEach(function (b) { b.style.transition = 'none'; });
+        body.classList.remove('morphing');
+        document.documentElement.removeAttribute('data-vt');
+        void body.offsetWidth;
+        requestAnimationFrame(function () {
+          boxes.forEach(function (b) { b.style.transition = ''; });
+        });
+      }
     } else {
       change();
     }
@@ -141,7 +161,7 @@
       if (view === 'linear') { open = null; }
       remember(view);
       render();
-    });
+    }, 'swap');
   }
 
   /* ---- events ------------------------------------------------------- */

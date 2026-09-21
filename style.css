@@ -260,7 +260,7 @@ ul.links a:focus-visible { color: var(--red); }
 /* ---- Photograph in a section ---------------------------------------- */
 
 .shot {
-  margin: 1.4rem 0 0;
+  margin: 1.4rem auto 0;
   max-width: 28rem;
 }
 
@@ -703,6 +703,16 @@ body.morphing .box.is-open::before { opacity: 0; }
   box-sizing: border-box;
   border: 1px solid var(--brass);
 }
+
+/*
+  Linear <-> visual is not a morph. views.js marks <html> with data-vt="swap"
+  for that transition, and every group is held at its final geometry so the
+  old and new snapshots simply cross-fade in place, the same fade the open
+  section gets when a box is picked.
+*/
+html[data-vt="swap"]::view-transition-group(*) { animation: none; }
+html[data-vt="swap"]::view-transition-old(*),
+html[data-vt="swap"]::view-transition-new(*) { object-position: left top; }
 
 /*
   The cross-fade runs for the whole morph, not the 250ms default, so content
