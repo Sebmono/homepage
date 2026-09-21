@@ -563,6 +563,29 @@ body.visual[data-open] .box-face     { transition: opacity calc(var(--dur) * 0.1
 body.visual[data-open] .box-label--v { transition-delay: calc(var(--dur) * 0.6), 0s;
                                        transition-duration: calc(var(--dur) * 0.4), 200ms; }
 
+/*
+  One photograph runs across all three boxes: each box paints the same image
+  at the full row width and shifts it left by its own index, so the gaps read
+  as cuts through a single picture rather than three separate pictures. It
+  leaves at once when a section opens (the outline morphs empty) and comes
+  back over the last 40% when the section closes.
+*/
+body.visual .box::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: url("img/scarpa-wide.jpg");
+  background-repeat: no-repeat;
+  background-size: var(--row-w) auto;
+  background-position: calc(-1 * var(--i) * (var(--box-w) + var(--box-gap))) center;
+  filter: grayscale(1) contrast(1.12);
+  opacity: var(--photo-op);
+  transition: opacity calc(var(--dur) * 0.4) ease calc(var(--dur) * 0.6);
+}
+
+body.visual[data-open] .box::after { opacity: 0; transition: opacity calc(var(--dur) * 0.15) ease 0s; }
+
 #box-now         { --i: 0; }
 #box-elsewhere   { --i: 1; }
 #box-battleforce { --i: 2; }

@@ -132,7 +132,7 @@
     // here rather than on t.ready: ready resolves a frame later in Chromium,
     // rejects outright when a transition is skipped, and is not worth relying
     // on across engines for something this small.
-    var timer = setTimeout(settle, Math.max(0, duration() - 32));
+    var timer = setTimeout(settle, Math.max(0, duration() - 16));
 
     t.finished.catch(function () {}).then(function () {
       clearTimeout(timer);
@@ -143,6 +143,10 @@
       if (!body.classList.contains('morphing')) { return; }
       boxes.forEach(function (b) { b.style.transition = 'none'; });
       body.classList.remove('morphing');
+      // Tear the pseudo tree down in the same frame the boxes take their
+      // border back. Two borders drawn a sub-pixel apart for even one frame
+      // read as a jitter; skipping the last few milliseconds does not.
+      if (t.skipTransition) { t.skipTransition(); }
       void body.offsetWidth;
       requestAnimationFrame(function () {
         boxes.forEach(function (b) { b.style.transition = ''; });
