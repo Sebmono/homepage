@@ -11,8 +11,9 @@
     class="visual"     which view we are in
     data-open="now"    which section is open (absent = the landing state)
 
-  Every change to either one runs as a single View Transitions API morph; see the
-  transitions section below and "The morph" in README.md.
+  Opening, closing and moving between sections run as a View Transitions API
+  morph of the three box outlines and nothing else; switching views is a plain
+  two-step fade. See the transitions section below and "The morph" in README.md.
 
   Choice order: ?view= / #hash in the URL, then localStorage, then visual by default.
   Deep links: ?view=visual&open=elsewhere, ?view=linear, #linear, #visual. The older
@@ -25,12 +26,13 @@
   var STORE = 'sm-view';
 
   var body = document.body;
+  var main = document.getElementById('main');
   var pane = document.getElementById('pane');
   var toggle = document.getElementById('view-toggle');
   var boxes = KEYS.map(function (k) { return document.getElementById('box-' + k); });
   var sections = KEYS.map(function (k) { return document.getElementById('sec-' + k); });
 
-  if (!pane || !toggle || boxes.indexOf(null) > -1) return;
+  if (!main || !pane || !toggle || boxes.indexOf(null) > -1) return;
 
 
   /* ---- names -------------------------------------------------------- */
@@ -95,58 +97,102 @@
   /* ---- transitions -------------------------------------------------- */
 
   /*
-    Every geometry change goes through the View Transitions API. The browser
-    snapshots each element that style.css gives a view-transition-name to, lets
-    the layout change happen, then runs each snapshot's bounding box from the
-    old rectangle to the new one and cross-fades the old and new content over
-    the top. A box turning into a tab, the pane growing between them and the
-    label swapping direction are all the same single morph, and none of it is
-    choreographed here.
+    The View Transitions API has one job here: run the three box outlines from
+    their old rectangles to their new ones. Nothing else is named, no snapshot
+    is ever shown, and every fade -- the two labels, the photograph behind the
+    boxes, the open section -- is an ordinary CSS transition or animation on a
+    live element, declared in style.css. The engines disagree about snapshots
+    and agree about live CSS, so the timing lives where they agree. See "The
+    morph" in README.md.
 
-    Without the API the state change simply applies. There is no second
-    animation path. The OS reduced-motion preference is deliberately ignored:
-    the owner wants the morph to run for everyone.
+    Without the API the state change simply applies and the CSS fades still
+    run. There is no second animation path, and the OS reduced-motion
+    preference is deliberately ignored: the owner wants this for everyone.
   */
-  function morph(change, kind) {
-    if (document.startViewTransition && !body.classList.contains('no-anim')) {
-      // While the morph runs the boxes drop their own border and the
-      // ::view-transition-group pseudo draws it instead. A border baked into
-      // the two snapshots would only cross-fade (square fading out, tab fading
-      // in); on the group it is a real box that changes shape.
-      body.classList.add('morphing');
-      // A view swap (linear <-> visual) is a plain in-place cross-fade; the
-      // stylesheet reads this attribute off <html> to stop the groups moving.
-      if (kind === 'swap') { document.documentElement.setAttribute('data-vt', 'swap'); }
+  function duration() {
+    var ms = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dur'));
+    return ms > 0 ? ms : 450;
+  }
 
-      var t = document.startViewTransition(change);
-      var quiet = function () {};
-
-      // Hand the border back to the boxes one frame before the pseudo tree is
-      // torn down, with the fade suppressed, so nothing blinks at the seam.
-      // (A hidden tab aborts the transition; ready rejects and that is noise.)
-      t.ready.then(function () {
-        var ms = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dur')) || 450;
-        setTimeout(settle, Math.max(0, ms - 32));
-      }, quiet);
-      t.finished.catch(quiet).then(settle);
-
-      function settle() {
-        if (!body.classList.contains('morphing')) { return; }
-        boxes.forEach(function (b) { b.style.transition = 'none'; });
-        body.classList.remove('morphing');
-        document.documentElement.removeAttribute('data-vt');
-        void body.offsetWidth;
-        requestAnimationFrame(function () {
-          boxes.forEach(function (b) { b.style.transition = ''; });
-        });
-      }
-    } else {
+  function morph(change) {
+    if (!document.startViewTransition || body.classList.contains('no-anim')) {
       change();
+      return;
+    }
+
+    // While the morph runs the boxes drop their own border and the
+    // ::view-transition-group pseudo draws it instead: on the group it is a
+    // real rectangle that changes shape, not a picture of a border.
+    body.classList.add('morphing');
+
+    var t = document.startViewTransition(change);
+
+    // Hand the border back one frame before the pseudo tree is torn down, with
+    // the fade suppressed, so nothing blinks at the seam. The clock starts
+    // here rather than on t.ready: ready resolves a frame later in Chromium,
+    // rejects outright when a transition is skipped, and is not worth relying
+    // on across engines for something this small.
+    var timer = setTimeout(settle, Math.max(0, duration() - 32));
+
+    t.finished.catch(function () {}).then(function () {
+      clearTimeout(timer);
+      settle();
+    });
+
+    function settle() {
+      if (!body.classList.contains('morphing')) { return; }
+      boxes.forEach(function (b) { b.style.transition = 'none'; });
+      body.classList.remove('morphing');
+      void body.offsetWidth;
+      requestAnimationFrame(function () {
+        boxes.forEach(function (b) { b.style.transition = ''; });
+      });
     }
   }
 
+  /*
+    Linear <-> visual is not a morph. The two layouts share no geometry worth
+    carrying across, so this does not touch the API: fade #main and the footer
+    out, apply the change while they are invisible, fade them back. Content
+    never moves while it can be seen.
+  */
+  var OUT = 160;
+  var swapping = false;
+
+  function swap(change) {
+    if (swapping) { return; }
+
+    if (body.classList.contains('no-anim')) {
+      change();
+      return;
+    }
+
+    swapping = true;
+    body.classList.add('swapping');
+
+    var done = false;
+
+    function half(event) {
+      // transitionend bubbles; only #main's own opacity ends the first half.
+      if (event && event.target !== main) { return; }
+      if (done) { return; }
+      done = true;
+      main.removeEventListener('transitionend', half);
+      change();
+      // One frame at the new layout before the fade back, so the browser has
+      // something to fade from.
+      requestAnimationFrame(function () {
+        body.classList.remove('swapping');
+        swapping = false;
+      });
+    }
+
+    main.addEventListener('transitionend', half);
+    setTimeout(half, OUT + 40);          // transitionend never fires if the tab is hidden
+  }
+
   function setOpen(next) {
-    if (next === open) { return; }
+    if (next === open || swapping) { return; }
     morph(function () {
       open = next;
       render();
@@ -156,12 +202,12 @@
   function setView(next) {
     var to = named(next) || 'visual';
     if (to === view) { return; }
-    morph(function () {
+    swap(function () {
       view = to;
       if (view === 'linear') { open = null; }
       remember(view);
       render();
-    }, 'swap');
+    });
   }
 
   /* ---- events ------------------------------------------------------- */

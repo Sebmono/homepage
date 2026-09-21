@@ -55,6 +55,10 @@
     <div class="boxes">
       <button type="button" class="box" id="box-now"
               aria-expanded="false" aria-controls="sec-now" hidden>
+        <!-- The frame is the only thing the view transition animates; see "The morph"
+             in README.md. It carries the view-transition-name so everything else in
+             the button stays live DOM during the morph. -->
+        <span class="box-frame" aria-hidden="true"></span>
         <span class="box-face">
           <span class="box-label">now</span>
         </span>
@@ -62,6 +66,10 @@
       </button>
       <button type="button" class="box" id="box-elsewhere"
               aria-expanded="false" aria-controls="sec-elsewhere" hidden>
+        <!-- The frame is the only thing the view transition animates; see "The morph"
+             in README.md. It carries the view-transition-name so everything else in
+             the button stays live DOM during the morph. -->
+        <span class="box-frame" aria-hidden="true"></span>
         <span class="box-face">
           <span class="box-label">elsewhere</span>
         </span>
@@ -69,6 +77,10 @@
       </button>
       <button type="button" class="box" id="box-battleforce"
               aria-expanded="false" aria-controls="sec-battleforce" hidden>
+        <!-- The frame is the only thing the view transition animates; see "The morph"
+             in README.md. It carries the view-transition-name so everything else in
+             the button stays live DOM during the morph. -->
+        <span class="box-frame" aria-hidden="true"></span>
         <span class="box-face">
           <span class="box-label">battleforce</span>
         </span>

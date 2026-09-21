@@ -507,6 +507,9 @@ body.visual .box-face {
   flex-direction: column;
   padding: 0 0.7rem;
   opacity: 1;
+  /* The box is a 3.5rem tab for part of the morph while this label is still
+     fading; let it be clipped rather than reflowed. */
+  white-space: nowrap;
 }
 
 body.visual .box-label--v {
@@ -532,6 +535,28 @@ body.visual .box-label {
 
 body.visual .box.is-open .box-label { color: var(--ink); }
 
+/*
+  The label swap is staggered against the morph rather than run flat against
+  it: the one leaving fades over the first 45% of --dur, the one arriving over
+  the last 45%, so the two are never both solid. Plain transitions on live
+  elements, which is why they read the same in every engine.
+
+  This has to sit below the colour transition above: the vertical label is also
+  a .box-label, and that shorthand would otherwise drop the opacity transition
+  and make the swap a hard cut.
+*/
+body.visual .box-face {
+  transition: opacity calc(var(--dur) * 0.45) ease calc(var(--dur) * 0.55);
+}
+
+body.visual .box-label--v {
+  transition: opacity calc(var(--dur) * 0.45) ease 0s,
+              color 200ms ease 0s;
+}
+
+body.visual[data-open] .box-face     { transition-delay: 0s; }
+body.visual[data-open] .box-label--v { transition-delay: calc(var(--dur) * 0.55), 0s; }
+
 
 /* ---- The drawing behind the boxes ----------------------------------- */
 
@@ -551,10 +576,12 @@ body.visual .box::after {
   background-position: calc(-1 * var(--i) * (var(--box-w) + var(--box-gap))) center;
   filter: grayscale(1) contrast(1.12);
   opacity: var(--photo-op);
-  transition: opacity 250ms ease;
+  /* Out over the first half of the morph when a section opens, back in over
+     the second half when it closes. */
+  transition: opacity calc(var(--dur) * 0.5) ease calc(var(--dur) * 0.5);
 }
 
-body.visual[data-open] .box::after { opacity: 0; }
+body.visual[data-open] .box::after { opacity: 0; transition-delay: 0s; }
 
 #box-now         { --i: 0; }
 #box-elsewhere   { --i: 1; }
@@ -596,6 +623,18 @@ body.visual[data-open] .pane {
 body.visual .pane h2::before { left: 0; }
 
 body.visual .pane section { margin: 0; }
+
+/*
+  Sections toggle the hidden attribute, so an opacity transition would never
+  fire on the way in. A keyframe animation restarts on whichever section has
+  just been unhidden, which also covers going straight from one open section to
+  another. It only fades: nothing about the section moves.
+*/
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+body.visual[data-open] .pane section:not([hidden]) {
+  animation: fade-in calc(var(--dur) * 0.7) ease calc(var(--dur) * 0.3) both;
+}
 
 /* ---- Mobile: bars in the landing state, a strip of tabs when open ---- */
 
@@ -650,110 +689,83 @@ body.visual .pane section { margin: 0; }
 
 /*
   Landing to tabs, tab to tab, and back again are one View Transitions API
-  morph rather than a set of CSS transitions on flex properties. views.js wraps
-  the state change in document.startViewTransition; the browser snapshots every
-  named element before and after, then runs each one's bounding box from its
-  old rectangle to its new one and cross-fades the two snapshots over the top.
-  That is what sends the four corners of each box straight to their new
-  position, grows the text pane alongside them, and dissolves the horizontal
-  label into the vertical one during the move instead of after it.
+  morph, but the transition is given exactly one job: run the three box
+  outlines from their old rectangles to their new ones. Nothing else is named,
+  no snapshot is ever visible, and every fade is an ordinary CSS transition or
+  animation on a live element.
+
+  That split is the whole point. The two engines composite snapshots
+  differently enough that anything built on them reads differently in each:
+  Chromium cross-fades the old and new images the way the spec reads, Firefox
+  leaves the live new DOM showing at full opacity underneath from the first
+  frame, so the fades had no effect there and content appeared to fly in and
+  bounce. Both engines render live DOM and live CSS identically, including
+  while a view transition is running, so all the timing lives there now and
+  the API is left holding four corners.
 
   Same-document view transitions: Chrome 111, Safari 18, Firefox 144. Anywhere
-  else the state change simply applies at once. The OS reduced-motion
-  preference is deliberately ignored: the morph runs for everyone.
-
-  The boxes are not rendered in the linear view, so their names are free there.
-  The footer is named because the page gets taller as a section opens and it
-  should travel rather than jump.
+  else the state change applies at once and the CSS fades below still run. The
+  OS reduced-motion preference is deliberately ignored: this runs for everyone.
 */
-#box-now         { view-transition-name: box-now; }
-#box-elsewhere   { view-transition-name: box-elsewhere; }
-#box-battleforce { view-transition-name: box-battleforce; }
-.pane            { view-transition-name: pane; }
-footer           { view-transition-name: footer; }
 
-/* The open section is named on its own, which lifts it out of the pane's
-   snapshot. The pane frame still grows with the boxes, but the words inside
-   simply fade in where they will sit instead of riding the frame's corner in
-   from the upper left. Only the visible section carries the name; a name may
-   not be shared by two rendered elements. */
-body.visual[data-open] .pane section:not([hidden]) { view-transition-name: pane-content; }
-
-::view-transition-group(*) {
-  animation-duration: var(--dur);
-  animation-timing-function: ease-in-out;
+/* The frame is an overlay, not part of the layout, and it is the only named
+   element on the page. Everything else inside the button stays live DOM.
+   inset:-1px puts it on the box's border box rather than its padding box, so
+   the border the group pseudo draws lands exactly where the box's own was. */
+body.visual .box-frame {
+  position: absolute;
+  inset: -1px;
+  z-index: 3;
+  pointer-events: none;
 }
+
+#box-now         .box-frame { view-transition-name: box-now; }
+#box-elsewhere   .box-frame { view-transition-name: box-elsewhere; }
+#box-battleforce .box-frame { view-transition-name: box-battleforce; }
 
 /*
-  The border is the one thing that must not cross-fade. Snapshots are flat
-  images, so a border painted into them can only fade from the square to the
-  tab. views.js puts "morphing" on <body> for the length of the transition;
-  the boxes go borderless for both snapshots and the group pseudo, a real box
-  whose width and height are what the browser animates, draws the line.
+  The group is a real rectangle whose width and height the browser animates, so
+  it can carry a border. views.js puts "morphing" on <body> for the length of
+  the transition; the box gives up its own border for that span and takes it
+  back one frame before the pseudo tree is torn down, so there is no blink at
+  the seam.
 */
-body.morphing .box {
-  border-color: transparent !important;   /* outranks the dimmed unselected-tab rule */
-  transition: none;                        /* or the old snapshot keeps the fading border */
-}
-body.morphing .box.is-open::before { opacity: 0; }
-
 ::view-transition-group(box-now),
 ::view-transition-group(box-elsewhere),
 ::view-transition-group(box-battleforce) {
+  animation-duration: var(--dur);
+  animation-timing-function: ease-in-out;
   box-sizing: border-box;
   border: 1px solid var(--brass);
 }
 
-/*
-  Linear <-> visual is not a morph. views.js marks <html> with data-vt="swap"
-  for that transition, and every group is held at its final geometry so the
-  old and new snapshots simply cross-fade in place, the same fade the open
-  section gets when a box is picked.
-*/
-html[data-vt="swap"]::view-transition-group(*) { animation: none; }
-html[data-vt="swap"]::view-transition-old(*),
-html[data-vt="swap"]::view-transition-new(*) { object-position: left top; }
+body.morphing .box {
+  border-color: transparent !important;   /* outranks the dimmed unselected-tab rule */
+  transition: none;                        /* or the border fades as it changes */
+}
+body.morphing .box.is-open::before { opacity: 0; }
 
-/*
-  The cross-fade runs for the whole morph, not the 250ms default, so content
-  changes with the shape. Each snapshot is held at the size it was captured at
-  and clipped to the group: stretching a 17rem square box into a 3.5rem tab
-  would drag the Scarpa drawing and the label out of shape.
-*/
-::view-transition-image-pair(*) { overflow: hidden; }
-
-::view-transition-old(*),
-::view-transition-new(*) {
-  animation-duration: var(--dur);
-  animation-timing-function: ease-in-out;
-  width: 100%;
-  height: 100%;
-  object-fit: none;
-  object-position: center;
+/* The two snapshots inside each group are flat images, and they were the whole
+   source of the difference between the engines. Hide them: what shows inside
+   the outline is the live page. */
+::view-transition-old(box-now),
+::view-transition-new(box-now),
+::view-transition-old(box-elsewhere),
+::view-transition-new(box-elsewhere),
+::view-transition-old(box-battleforce),
+::view-transition-new(box-battleforce) {
+  animation: none;
+  opacity: 0;
 }
 
-/* A box's label sits in the middle of it, so centring the snapshot is right.
-   Text starts at its top left corner, so the pane and the footer are pinned
-   there instead and the words are uncovered from the left as the pane widens
-   rather than creeping in from both edges at once. */
-::view-transition-old(pane),
-::view-transition-new(pane),
-::view-transition-old(pane-content),
-::view-transition-new(pane-content),
-::view-transition-old(footer),
-::view-transition-new(footer) { object-position: left top; }
-
-/* Entering text has no old snapshot, so its group does not move; it fades in
-   place. Between two open sections the group holds still as well, and only
-   the words cross-fade. */
-::view-transition-group(pane-content) { animation-duration: var(--dur); }
-
 /*
-  Everything that moves is named, so the page-wide pair has nothing to say.
-  Left to itself it would cross-fade the masthead and nav against themselves.
-  The UA sizing is restored here: the page snapshot must not be squeezed into
-  the growing root group.
+  The page itself is not animated at all. Holding the root group still and
+  turning off its pair leaves the live new DOM as what is visible for the whole
+  morph, which is what the fades below are timed against. The UA sizing is
+  restored so the page is not squeezed into the group.
 */
+::view-transition-group(root) { animation: none; }
+
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
@@ -763,10 +775,26 @@ html[data-vt="swap"]::view-transition-new(*) { object-position: left top; }
   object-fit: fill;
 }
 
+/* ---- Linear <-> visual ---------------------------------------------- */
+
+/*
+  The view swap is not a morph and does not go through the API at all: the two
+  layouts share no geometry worth carrying over. views.js fades #main and the
+  footer out, applies the change while they are invisible, then fades them
+  back, so nothing ever moves while anything is visible.
+*/
+#main,
+footer { transition: opacity 240ms ease; }
+
+body.swapping #main,
+body.swapping footer { opacity: 0; transition-duration: 160ms; }
+
 /* ---- Motion -------------------------------------------------------- */
 
 body.no-anim,
 body.no-anim *,
 body.no-anim *::before,
 body.no-anim *::after { transition: none !important; }
+
+body.no-anim .pane section { animation: none !important; }
 

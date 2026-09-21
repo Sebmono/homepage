@@ -35,9 +35,9 @@ opens that section's text between them: the tabs up to and including the selecte
 on the left, the rest move to the right. Click the open tab again, or press Escape, to go
 back to the three boxes. Arrow keys move between the tabs.
 
-Each box carries two labels, one horizontal and one vertical. Only one is visible in each
-state and neither has any timing of its own; the morph below cross-fades them. The vertical
-one is `aria-hidden`.
+Each box carries two labels, one horizontal and one vertical, plus a `.box-frame` overlay
+that exists only to be animated. Only one label is visible in each state; the morph below
+fades one out and the other in. The vertical label and the frame are `aria-hidden`.
 
 `views.js` adds the class `visual` to `<body>` and sets `data-open` to the section name;
 everything else is CSS. The choice is stored in `localStorage` under `sm-view`.
@@ -46,7 +46,20 @@ everything else is CSS. The choice is stored in `localStorage` under `sm-view`.
 
 Landing to tabs, tab to tab, and back again are one
 [view transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API),
-not a set of CSS transitions on flex properties. `views.js` wraps the state change:
+but the transition is given exactly one job: run the three box outlines from their old
+rectangles to their new ones. Nothing else on the page is named, no snapshot is ever
+visible, and every fade is an ordinary CSS transition or animation on a live element.
+
+That split is deliberate, and it is what makes the two engines agree. An earlier version
+named the boxes, the text pane, the open section and the footer, and leaned on the
+old/new snapshot cross-fade to swap content during the move. Chromium composited that the
+way the spec reads. Firefox left the live new DOM showing at full opacity underneath from
+the first frame, so none of the snapshot rules had any visible effect there: content
+appeared to fly in from the upper left and to bounce while a box changed shape. Both
+engines render live DOM and live CSS identically, including while a view transition is
+running, so all the timing now lives there and the API is left holding four corners.
+
+`views.js` wraps the state change:
 
 ```js
 if (document.startViewTransition) {
@@ -56,32 +69,62 @@ if (document.startViewTransition) {
 }
 ```
 
-`style.css` gives each box a `view-transition-name` (`box-now`, `box-elsewhere`,
-`box-battleforce`), plus `pane` and `footer`. The browser snapshots each named element
-before and after the layout change, then runs its bounding box from the old rectangle to
-the new one and cross-fades the two snapshots over the top. That is what sends the four
-corners of a box straight to their new position, grows the text pane alongside them,
-dissolves the horizontal label into the vertical one *during* the move, and sends the
-footer travelling as the page gets taller. `--dur` on `:root` sets the length for all of
-it; it is declared there rather than on `body.visual` because the view transition
-pseudo-elements hang off `<html>` and inherit from it.
+The pieces in `style.css`:
 
-Two details in that CSS are load-bearing:
+- Each box contains a `.box-frame` span: an absolutely positioned overlay that draws
+  nothing and carries the `view-transition-name` (`box-now`, `box-elsewhere`,
+  `box-battleforce`). The name is on the overlay rather than on the button so that
+  everything else inside the button stays live DOM through the morph. An element with a
+  view-transition-name is painted only through its snapshot, so a name on the button would
+  take the labels and the photograph with it. `inset: -1px` puts the overlay on the
+  button's border box rather than its padding box, so the border lands where the button's
+  own border was.
+- `::view-transition-group(box-*)` carries `box-sizing: border-box` and a 1px brass
+  border. The group is a real rectangle whose width and height the browser animates, so it
+  can draw a line that changes shape; a border baked into a snapshot could only cross-fade
+  from square to tab. `body.morphing` on `<body>` holds the buttons borderless for the
+  length of the transition, and `views.js` hands the border back one frame before the
+  pseudo tree is torn down so nothing blinks at the seam.
+- `::view-transition-old(box-*)` and `::view-transition-new(box-*)` are hidden
+  (`animation: none; opacity: 0`). They were the entire source of the difference between
+  the engines. What shows inside a moving outline is the live page.
+- `::view-transition-group(root)` has its animation off, and the root old/new pair too, so
+  the page is not animated at all and the live new DOM is simply what is visible for the
+  whole morph. That is what the fades below are timed against.
 
-- `::view-transition-old(*)` and `::view-transition-new(*)` are pinned to
-  `object-fit: none` and clipped by `overflow: hidden` on the image pair. The default
-  stretches each snapshot to the size of the animating group, which drags the Scarpa
-  drawing and the labels out of shape as a 17rem square becomes a 3.5rem tab. The pane and
-  the footer hold theirs at `object-position: left top`, so their words are uncovered from
-  the left rather than creeping in from both edges.
-- `::view-transition-old(root)` and `::view-transition-new(root)` have their animation
-  turned off. Everything that moves is named, so the page-wide pair has nothing to say;
-  left to itself it cross-fades the masthead and nav against themselves.
+The fades, all of them plain CSS on live elements:
 
-Anything before Chrome 111, Safari 18 or Firefox 144 has no same-document view
-transitions and gets an instant state change instead. The OS reduced-motion preference is
-deliberately ignored so the morph runs for everyone; there is no second animation path.
+| What | When |
+| --- | --- |
+| the label that is leaving (`.box-face` or `.box-label--v`) | first 45% of `--dur` |
+| the label that is arriving | last 45% of `--dur` |
+| the photograph behind the boxes (`.box::after`) | out over the first half, in over the second |
+| the open section | fades in place over the last 70%, `animation: fade-in` |
 
+The two label rules sit *below* the `.box-label` colour transition in the file on purpose:
+the vertical label is also a `.box-label`, and that shorthand would otherwise drop the
+opacity transition and turn the swap into a hard cut. Sections toggle the `hidden`
+attribute, so an opacity transition would never fire on the way in; a keyframe animation
+restarts on whichever section has just been unhidden, which also covers going straight
+from one open section to another. Nothing about the section moves, only its opacity.
+
+`--dur` on `:root` sets the length for all of it, the groups and the CSS fades alike. It is
+declared there rather than on `body.visual` because the view transition pseudo-elements
+hang off `<html>` and inherit from it.
+
+Anything before Chrome 111, Safari 18 or Firefox 144 has no same-document view transitions
+and gets an instant state change, with the CSS fades still running. The OS reduced-motion
+preference is deliberately ignored so the morph runs for everyone; there is no second
+animation path.
+
+### The view swap
+
+Linear to visual and back does not go through the View Transitions API at all. The two
+layouts share no geometry worth carrying across, and doing so only made content fly in from the corner. `views.js`
+adds `body.swapping`, which fades `#main` and the footer out over 160ms, applies the state
+change while they are invisible, then removes the class so they fade back over 240ms.
+Nothing ever moves while anything is visible, and a second click is ignored while a swap
+is in flight.
 
 ### Linking to a view
 
