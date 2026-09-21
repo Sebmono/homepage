@@ -561,9 +561,22 @@ body.visual .box-label--v {
 /* Opening: what leaves goes at once, so the outline morphs empty and the live
    tab-width layout never shows as a clipped strip inside the big frame; what
    arrives fades in over the last 40%. */
-body.visual[data-open] .box-face     { transition: opacity calc(var(--dur) * 0.15) ease 0s; }
+body.visual[data-open] .box-face     { transition: opacity calc(var(--dur) * 0.08) ease 0s; }
 body.visual[data-open] .box-label--v { transition-delay: calc(var(--dur) * 0.6), 0s;
                                        transition-duration: calc(var(--dur) * 0.4), 200ms; }
+
+/* Tab to tab: both states show vertical labels at full opacity, so without
+   help they would simply stand at their destinations while the outlines
+   travel. Drop them at once and bring them back over the last third. */
+html[data-vt="tab"] body.visual .box-label--v {
+  animation: label-hop var(--dur) ease both;
+}
+@keyframes label-hop {
+  0%   { opacity: 1; }
+  10%  { opacity: 0; }
+  65%  { opacity: 0; }
+  100% { opacity: 1; }
+}
 
 /*
   One photograph runs across all three boxes: each box paints the same image
@@ -638,7 +651,9 @@ body.visual .pane section { margin: 0; }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 
 body.visual[data-open] .pane section:not([hidden]) {
-  animation: fade-in calc(var(--dur) * 0.7) ease calc(var(--dur) * 0.3) both;
+  /* Starts at 80% of the morph and runs past its end, so moving outlines
+     never cross visible text; the outgoing section is hidden at once. */
+  animation: fade-in calc(var(--dur) * 0.55) ease calc(var(--dur) * 0.8) both;
 }
 
 /* ---- Mobile: bars in the landing state, a strip of tabs when open ---- */
@@ -748,9 +763,10 @@ body.visual .box-frame {
   animation-timing-function: ease-in-out;
   box-sizing: border-box;
   border: 1px solid var(--brass);
-  /* Filled with the page colour so a box in motion covers the text it is
-     crossing instead of showing it through the outline. */
-  background: var(--bg);
+  /* No fill: the pseudo tree sits above the page, so an opaque fill would
+     hide the live labels fading inside the outline. See-through is avoided
+     by holding the incoming section text back until the outlines have all
+     but stopped (the fade-in below). */
 }
 
 body.morphing .box {
