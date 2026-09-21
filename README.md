@@ -49,7 +49,7 @@ Landing to tabs, tab to tab, and back again are one
 not a set of CSS transitions on flex properties. `views.js` wraps the state change:
 
 ```js
-if (document.startViewTransition && !reduced.matches) {
+if (document.startViewTransition) {
   document.startViewTransition(render);
 } else {
   render();
@@ -79,14 +79,9 @@ Two details in that CSS are load-bearing:
   left to itself it cross-fades the masthead and nav against themselves.
 
 Anything before Chrome 111, Safari 18 or Firefox 144 has no same-document view
-transitions and gets an instant state change instead. So does anyone who asks for reduced
-motion: `views.js` checks `prefers-reduced-motion` before starting a transition, and there
-is no second animation path to keep in step.
+transitions and gets an instant state change instead. The OS reduced-motion preference is
+deliberately ignored so the morph runs for everyone; there is no second animation path.
 
-The reduced-motion block in `style.css` is flat on purpose (`*, *::before, *::after`). It
-used to list the animated selectors one at a time, which lost to the more specific
-`body.visual[data-open]` rules: the geometry stopped moving while the labels kept fading,
-so a reader on reduced motion saw the boxes snap and then the label arrive after them.
 
 ### Linking to a view
 

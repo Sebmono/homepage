@@ -659,8 +659,8 @@ body.visual .pane section { margin: 0; }
   label into the vertical one during the move instead of after it.
 
   Same-document view transitions: Chrome 111, Safari 18, Firefox 144. Anywhere
-  else the state change simply applies at once, which is also what a reader who
-  asks for reduced motion gets.
+  else the state change simply applies at once. The OS reduced-motion
+  preference is deliberately ignored: the morph runs for everyone.
 
   The boxes are not rendered in the linear view, so their names are free there.
   The footer is named because the page gets taller as a section opens and it
@@ -726,15 +726,3 @@ body.no-anim *,
 body.no-anim *::before,
 body.no-anim *::after { transition: none !important; }
 
-/*
-  Flat, not selective. The old version of this block listed the animated
-  selectors one by one and lost to the more specific [data-open] rules, so the
-  geometry stopped moving while the labels kept fading: the reported snap.
-*/
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-  }
-}

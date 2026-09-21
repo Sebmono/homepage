@@ -32,7 +32,6 @@
 
   if (!pane || !toggle || boxes.indexOf(null) > -1) return;
 
-  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   /* ---- names -------------------------------------------------------- */
 
@@ -104,12 +103,15 @@
     label swapping direction are all the same single morph, and none of it is
     choreographed here.
 
-    Without the API, or for a reader who asks for reduced motion, the state
-    change simply applies. There is no second animation path.
+    Without the API the state change simply applies. There is no second
+    animation path. The OS reduced-motion preference is deliberately ignored:
+    the owner wants the morph to run for everyone.
   */
   function morph(change) {
-    if (document.startViewTransition && !reduced.matches && !body.classList.contains('no-anim')) {
-      document.startViewTransition(change);
+    if (document.startViewTransition && !body.classList.contains('no-anim')) {
+      // A hidden tab aborts the transition; the state change still applies,
+      // so the rejection is noise.
+      document.startViewTransition(change).ready.catch(function () {});
     } else {
       change();
     }
