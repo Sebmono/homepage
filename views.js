@@ -111,7 +111,10 @@
     if (document.startViewTransition && !body.classList.contains('no-anim')) {
       // A hidden tab aborts the transition; the state change still applies,
       // so the rejection is noise.
-      document.startViewTransition(change).ready.catch(function () {});
+      var t = document.startViewTransition(change);
+      var quiet = function () {};
+      t.ready.catch(quiet);
+      t.finished.catch(quiet);
     } else {
       change();
     }

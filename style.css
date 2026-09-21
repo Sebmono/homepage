@@ -25,7 +25,7 @@
 
   /* How long the morph runs. It lives on the root because the view transition
      pseudo-elements hang off <html> and inherit from it, not from <body>. */
-  --dur: 800ms;
+  --dur: 450ms;
 
   /* The wide frame: the visual view's box row, and what the top nav aligns to. */
   --wide:  53rem;                         /* ~1.4x the text measure */
@@ -672,6 +672,13 @@ body.visual .pane section { margin: 0; }
 .pane            { view-transition-name: pane; }
 footer           { view-transition-name: footer; }
 
+/* The open section is named on its own, which lifts it out of the pane's
+   snapshot. The pane frame still grows with the boxes, but the words inside
+   simply fade in where they will sit instead of riding the frame's corner in
+   from the upper left. Only the visible section carries the name; a name may
+   not be shared by two rendered elements. */
+body.visual[data-open] .pane section:not([hidden]) { view-transition-name: pane-content; }
+
 ::view-transition-group(*) {
   animation-duration: var(--dur);
   animation-timing-function: ease-in-out;
@@ -701,8 +708,15 @@ footer           { view-transition-name: footer; }
    rather than creeping in from both edges at once. */
 ::view-transition-old(pane),
 ::view-transition-new(pane),
+::view-transition-old(pane-content),
+::view-transition-new(pane-content),
 ::view-transition-old(footer),
 ::view-transition-new(footer) { object-position: left top; }
+
+/* Entering text has no old snapshot, so its group does not move; it fades in
+   place. Between two open sections the group holds still as well, and only
+   the words cross-fade. */
+::view-transition-group(pane-content) { animation-duration: var(--dur); }
 
 /*
   Everything that moves is named, so the page-wide pair has nothing to say.
