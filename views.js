@@ -11,6 +11,9 @@
     class="visual"     which view we are in
     data-open="now"    which section is open (absent = the landing state)
 
+  Every change to either one runs as a single View Transitions API morph; see the
+  transitions section below and "The morph" in README.md.
+
   Choice order: ?view= / #hash in the URL, then localStorage, then visual by default.
   Deep links: ?view=visual&open=elsewhere, ?view=linear, #linear, #visual. The older
   names fun and simple are still accepted everywhere a view name is read.
@@ -93,35 +96,42 @@
   /* ---- transitions -------------------------------------------------- */
 
   /*
-    Landing <-> open animates on its own: the text pane grows from zero width, so the
-    boxes never have to jump past it. Switching straight from one open section to
-    another does move boxes across the pane, so that one case gets a FLIP: measure,
-    apply the new state, then slide each element back from where it was.
+    Every geometry change goes through the View Transitions API. The browser
+    snapshots each element that style.css gives a view-transition-name to, lets
+    the layout change happen, then runs each snapshot's bounding box from the
+    old rectangle to the new one and cross-fades the old and new content over
+    the top. A box turning into a tab, the pane growing between them and the
+    label swapping direction are all the same single morph, and none of it is
+    choreographed here.
+
+    Without the API, or for a reader who asks for reduced motion, the state
+    change simply applies. There is no second animation path.
   */
+  function morph(change) {
+    if (document.startViewTransition && !reduced.matches && !body.classList.contains('no-anim')) {
+      document.startViewTransition(change);
+    } else {
+      change();
+    }
+  }
+
   function setOpen(next) {
-    var flip = open && next && open !== next && !reduced.matches;
-    var movers = flip ? boxes.concat([pane]) : [];
-    var before = movers.map(function (el) { return el.getBoundingClientRect().left; });
-
-    open = next;
-    render();
-
-    movers.forEach(function (el, i) {
-      var dx = before[i] - el.getBoundingClientRect().left;
-      if (!dx) return;
-      el.style.transition = 'none';
-      el.style.transform = 'translateX(' + dx + 'px)';
-      void el.offsetWidth;            // flush, so the next line animates
-      el.style.transition = '';
-      el.style.transform = '';
+    if (next === open) { return; }
+    morph(function () {
+      open = next;
+      render();
     });
   }
 
   function setView(next) {
-    view = named(next) || 'visual';
-    if (view === 'linear') { open = null; }
-    remember(view);
-    render();
+    var to = named(next) || 'visual';
+    if (to === view) { return; }
+    morph(function () {
+      view = to;
+      if (view === 'linear') { open = null; }
+      remember(view);
+      render();
+    });
   }
 
   /* ---- events ------------------------------------------------------- */

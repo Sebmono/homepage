@@ -23,6 +23,10 @@
   --measure: 38rem;
   --gutter: 16px;
 
+  /* How long the morph runs. It lives on the root because the view transition
+     pseudo-elements hang off <html> and inherit from it, not from <body>. */
+  --dur: 450ms;
+
   /* The wide frame: the visual view's box row, and what the top nav aligns to. */
   --wide:  53rem;                         /* ~1.4x the text measure */
   --row-w: min(var(--wide), calc(100vw - 2 * var(--gutter)));
@@ -69,7 +73,12 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+/* The gutter is reserved whether or not the page is long enough to scroll, so
+   switching views or opening a section cannot shift the centred column sideways. */
+html {
+  -webkit-text-size-adjust: 100%;
+  scrollbar-gutter: stable;
+}
 
 body {
   margin: 0;
@@ -186,10 +195,10 @@ main section {
 
 main section:last-child { margin-bottom: 0; }
 
-/* Home, linear view: the three sections share one fixed height, set by the tallest. */
+/* Home, linear view: a plain stack. Each section is as tall as its own content;
+   only the visual view needs the shared height, and it sets it on #main. */
 .pane {
   display: grid;
-  grid-auto-rows: 1fr;
   row-gap: 3.2rem;
 }
 
@@ -406,7 +415,6 @@ body.visual {
   --box-gap: 0.85rem;
   --tab-w:   3.5rem;
   --open-h:  28.5rem;
-  --dur:     450ms;
   --box-w:   calc((var(--row-w) - 2 * var(--box-gap)) / 3);
 }
 
@@ -422,7 +430,6 @@ body.visual #main {
   align-items: stretch;
   gap: var(--box-gap);
   height: var(--box-w);                   /* square boxes in the landing state */
-  transition: height var(--dur) ease-in-out;
 }
 
 body.visual[data-open] #main { height: var(--open-h); }
@@ -444,11 +451,7 @@ body.visual .box {
   border-radius: 0;
   overflow: hidden;
   cursor: pointer;
-  transition:
-    flex-grow   var(--dur) ease-in-out,
-    flex-basis  var(--dur) ease-in-out,
-    transform   var(--dur) ease-in-out,
-    border-color 200ms ease;
+  transition: border-color 200ms ease;
 }
 
 body.visual .box:focus-visible { outline-offset: -4px; }
@@ -483,10 +486,12 @@ body.visual .box.is-open::before {
 /* ---- Labels -------------------------------------------------------- */
 
 /*
-  Two labels sit on top of each other: the horizontal one and
-  a vertical duplicate for the tab state. Rotating one element would hard-cut
-  between writing modes, so they cross-fade over the same duration as the
-  box geometry. The duplicate is aria-hidden.
+  Two labels sit on top of each other: the horizontal one and a vertical
+  duplicate for the tab state. Rotating one element would hard-cut between
+  writing modes, so each state simply shows one of them and hides the other,
+  with no timing of its own. The morph cross-fades the old and new snapshot of
+  the whole box, so the swap dissolves while the box changes shape. The
+  duplicate is aria-hidden.
 */
 body.visual .box-face,
 body.visual .box-label--v {
@@ -496,15 +501,12 @@ body.visual .box-label--v {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity var(--dur) ease-in-out;
 }
 
 body.visual .box-face {
   flex-direction: column;
   padding: 0 0.7rem;
   opacity: 1;
-  /* Closing: horizontal label fades back in during the second half. */
-  transition: opacity calc(var(--dur) / 2) ease-out calc(var(--dur) / 2);
 }
 
 body.visual .box-label--v {
@@ -515,17 +517,8 @@ body.visual .box-label--v {
   opacity: 0;
 }
 
-/* Opening: horizontal label fades out in the first half, vertical fades in
-   during the second, so the two never sit on top of each other. */
-body.visual[data-open] .box-face {
-  opacity: 0;
-  transition: opacity calc(var(--dur) / 2) ease-in;
-}
-body.visual[data-open] .box-label--v {
-  opacity: 1;
-  transition: opacity calc(var(--dur) / 2) ease-out calc(var(--dur) / 2);
-}
-body.visual .box-label--v { transition: opacity calc(var(--dur) / 2) ease-in; }
+body.visual[data-open] .box-face { opacity: 0; }
+body.visual[data-open] .box-label--v { opacity: 1; }
 
 body.visual .box-label {
   font-family: var(--sans);
@@ -588,11 +581,6 @@ body.visual .pane {
   opacity: 0;
   /* Cancels the flex gap the empty pane would otherwise add in the landing state. */
   margin-inline-start: calc(-1 * var(--box-gap));
-  transition:
-    flex-grow  var(--dur) ease-in-out,
-    transform  var(--dur) ease-in-out,
-    margin     var(--dur) ease-in-out,
-    opacity    200ms ease 250ms;
 }
 
 body.visual[data-open] .pane {
@@ -658,6 +646,79 @@ body.visual .pane section { margin: 0; }
   body.visual[data-open] .pane { margin-top: 1.8rem; }
 }
 
+/* ---- The morph ------------------------------------------------------ */
+
+/*
+  Landing to tabs, tab to tab, and back again are one View Transitions API
+  morph rather than a set of CSS transitions on flex properties. views.js wraps
+  the state change in document.startViewTransition; the browser snapshots every
+  named element before and after, then runs each one's bounding box from its
+  old rectangle to its new one and cross-fades the two snapshots over the top.
+  That is what sends the four corners of each box straight to their new
+  position, grows the text pane alongside them, and dissolves the horizontal
+  label into the vertical one during the move instead of after it.
+
+  Same-document view transitions: Chrome 111, Safari 18, Firefox 144. Anywhere
+  else the state change simply applies at once, which is also what a reader who
+  asks for reduced motion gets.
+
+  The boxes are not rendered in the linear view, so their names are free there.
+  The footer is named because the page gets taller as a section opens and it
+  should travel rather than jump.
+*/
+#box-now         { view-transition-name: box-now; }
+#box-elsewhere   { view-transition-name: box-elsewhere; }
+#box-battleforce { view-transition-name: box-battleforce; }
+.pane            { view-transition-name: pane; }
+footer           { view-transition-name: footer; }
+
+::view-transition-group(*) {
+  animation-duration: var(--dur);
+  animation-timing-function: ease-in-out;
+}
+
+/*
+  The cross-fade runs for the whole morph, not the 250ms default, so content
+  changes with the shape. Each snapshot is held at the size it was captured at
+  and clipped to the group: stretching a 17rem square box into a 3.5rem tab
+  would drag the Scarpa drawing and the label out of shape.
+*/
+::view-transition-image-pair(*) { overflow: hidden; }
+
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: var(--dur);
+  animation-timing-function: ease-in-out;
+  width: 100%;
+  height: 100%;
+  object-fit: none;
+  object-position: center;
+}
+
+/* A box's label sits in the middle of it, so centring the snapshot is right.
+   Text starts at its top left corner, so the pane and the footer are pinned
+   there instead and the words are uncovered from the left as the pane widens
+   rather than creeping in from both edges at once. */
+::view-transition-old(pane),
+::view-transition-new(pane),
+::view-transition-old(footer),
+::view-transition-new(footer) { object-position: left top; }
+
+/*
+  Everything that moves is named, so the page-wide pair has nothing to say.
+  Left to itself it would cross-fade the masthead and nav against themselves.
+  The UA sizing is restored here: the page snapshot must not be squeezed into
+  the growing root group.
+*/
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+  width: 100%;
+  height: auto;
+  object-fit: fill;
+}
+
 /* ---- Motion -------------------------------------------------------- */
 
 body.no-anim,
@@ -665,12 +726,15 @@ body.no-anim *,
 body.no-anim *::before,
 body.no-anim *::after { transition: none !important; }
 
+/*
+  Flat, not selective. The old version of this block listed the animated
+  selectors one by one and lost to the more specific [data-open] rules, so the
+  geometry stopped moving while the labels kept fading: the reported snap.
+*/
 @media (prefers-reduced-motion: reduce) {
-  body.visual #main,
-  body.visual .box,
-  body.visual .box::after,
-  body.visual .box-face,
-  body.visual .box-label,
-  body.visual .box-label--v,
-  body.visual .pane { transition: none; }
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

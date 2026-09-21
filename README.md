@@ -22,9 +22,11 @@ Built with Claude Code.
 The home page renders two ways at the same URL. A link in the top-right nav switches
 between them. The link names the view it takes you to, not the one you are in.
 
-**Linear view** is the plain stack: masthead, then Now, Elsewhere and BattleForce at equal
-heights. It is what the HTML renders on its own, so it is also what you get with
-JavaScript off.
+**Linear view** is the plain stack: masthead, then Now, Elsewhere and BattleForce, each as
+tall as its own content with `3.2rem` between them. It is what the HTML renders on its own,
+so it is also what you get with JavaScript off. The three used to share one height set by
+the tallest of them, which left dead space under Now and BattleForce; only the visual view
+needs a shared height, and it sets that on `#main` rather than on the sections.
 
 **Visual view** is the default. Three square boxes sit below the masthead, each with a
 large lowercase label and its own slice of a single Scarpa photograph
@@ -33,11 +35,58 @@ opens that section's text between them: the tabs up to and including the selecte
 on the left, the rest move to the right. Click the open tab again, or press Escape, to go
 back to the three boxes. Arrow keys move between the tabs.
 
-Each box carries two labels, one horizontal and one vertical, and they cross-fade as the
-box becomes a tab; the vertical one is `aria-hidden`.
+Each box carries two labels, one horizontal and one vertical. Only one is visible in each
+state and neither has any timing of its own; the morph below cross-fades them. The vertical
+one is `aria-hidden`.
 
 `views.js` adds the class `visual` to `<body>` and sets `data-open` to the section name;
 everything else is CSS. The choice is stored in `localStorage` under `sm-view`.
+
+### The morph
+
+Landing to tabs, tab to tab, and back again are one
+[view transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API),
+not a set of CSS transitions on flex properties. `views.js` wraps the state change:
+
+```js
+if (document.startViewTransition && !reduced.matches) {
+  document.startViewTransition(render);
+} else {
+  render();
+}
+```
+
+`style.css` gives each box a `view-transition-name` (`box-now`, `box-elsewhere`,
+`box-battleforce`), plus `pane` and `footer`. The browser snapshots each named element
+before and after the layout change, then runs its bounding box from the old rectangle to
+the new one and cross-fades the two snapshots over the top. That is what sends the four
+corners of a box straight to their new position, grows the text pane alongside them,
+dissolves the horizontal label into the vertical one *during* the move, and sends the
+footer travelling as the page gets taller. `--dur` on `:root` sets the length for all of
+it; it is declared there rather than on `body.visual` because the view transition
+pseudo-elements hang off `<html>` and inherit from it.
+
+Two details in that CSS are load-bearing:
+
+- `::view-transition-old(*)` and `::view-transition-new(*)` are pinned to
+  `object-fit: none` and clipped by `overflow: hidden` on the image pair. The default
+  stretches each snapshot to the size of the animating group, which drags the Scarpa
+  drawing and the labels out of shape as a 17rem square becomes a 3.5rem tab. The pane and
+  the footer hold theirs at `object-position: left top`, so their words are uncovered from
+  the left rather than creeping in from both edges.
+- `::view-transition-old(root)` and `::view-transition-new(root)` have their animation
+  turned off. Everything that moves is named, so the page-wide pair has nothing to say;
+  left to itself it cross-fades the masthead and nav against themselves.
+
+Anything before Chrome 111, Safari 18 or Firefox 144 has no same-document view
+transitions and gets an instant state change instead. So does anyone who asks for reduced
+motion: `views.js` checks `prefers-reduced-motion` before starting a transition, and there
+is no second animation path to keep in step.
+
+The reduced-motion block in `style.css` is flat on purpose (`*, *::before, *::after`). It
+used to list the animated selectors one at a time, which lost to the more specific
+`body.visual[data-open]` rules: the geometry stopped moving while the labels kept fading,
+so a reader on reduced motion saw the boxes snap and then the label arrive after them.
 
 ### Linking to a view
 
@@ -71,6 +120,16 @@ under `:root[data-theme="dark"]`. Keep the two blocks in step when changing a co
 The control is hidden in the markup and unhidden by `theme.js`, so with JavaScript off the
 page simply follows the system setting.
 
+## The scrollbar gutter
+
+`html` carries `scrollbar-gutter: stable`. Opening a section or switching views changes the
+page height, so without it the vertical scrollbar appears and disappears and the centred
+column jumps sideways by half the scrollbar width on every state change. Reserving the
+gutter whether or not the page scrolls holds the column still.
+[CSS Overflow 3](https://drafts.csswg.org/css-overflow-3/#scrollbar-gutter-property);
+Chrome 94, Firefox 97, Safari 17.4. It does nothing on a platform with overlay scrollbars,
+which take no layout space and cause no shift in the first place.
+
 ## The nav frame
 
 The top nav is not on the 38rem text measure. It is the width of `--row-w`, the same wide
@@ -97,10 +156,11 @@ large-scale horizontal structure, since it is held at 17% opacity (23% in dark m
 desaturated by the `.box::after` rule. Stacked bars on mobile cannot read as one picture,
 so there each bar takes a third of the image across instead.
 
-`img/pax-pamir.jpg` sits under the links in the Elsewhere section. It is what fills the
-space the shared fixed section height would otherwise leave empty, so if you swap it for
-something a different shape, check both views: `--open-h` in `body.visual` is sized to the
-tallest section, and in the linear view every section grows to match.
+`img/pax-pamir.jpg` sits under the links in the Elsewhere section, which is the tallest of
+the three. If you swap it for something a different shape, check the visual view:
+`--open-h` in `body.visual` is the fixed height the tabs and the text pane share, and it is
+sized to that section. The linear view no longer cares, since each section is as tall as
+its own content.
 
 Update the credits below and the comment at the top of `index.html` when you swap either.
 
