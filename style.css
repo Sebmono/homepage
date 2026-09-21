@@ -411,7 +411,9 @@ footer p {
    and it stays seamless because the text pane grows out of zero width.
    --------------------------------------------------------------------- */
 
-body.visual {
+/* Box geometry lives on :root, not body.visual: the view-transition pseudos
+   hang off <html> and need --box-w and --box-gap to place the photo. */
+:root {
   --box-gap: 0.85rem;
   --tab-w:   3.5rem;
   --open-h:  28.5rem;
@@ -584,7 +586,7 @@ body.visual .box::after {
   transition: opacity calc(var(--dur) * 0.4) ease calc(var(--dur) * 0.6);
 }
 
-body.visual[data-open] .box::after { opacity: 0; transition: opacity calc(var(--dur) * 0.15) ease 0s; }
+body.visual[data-open] .box::after { opacity: 0; transition: none; }
 
 #box-now         { --i: 0; }
 #box-elsewhere   { --i: 1; }
@@ -640,6 +642,12 @@ body.visual[data-open] .pane section:not([hidden]) {
 }
 
 /* ---- Mobile: bars in the landing state, a strip of tabs when open ---- */
+
+@media (max-width: 40rem) {
+  ::view-transition-image-pair(box-now),
+  ::view-transition-image-pair(box-elsewhere),
+  ::view-transition-image-pair(box-battleforce) { background-image: none; animation: none; }
+}
 
 @media (max-width: 40rem) {
   body.visual #main {
@@ -763,6 +771,42 @@ body.morphing .box.is-open::before { opacity: 0; }
   animation: none;
   opacity: 0;
 }
+
+/*
+  The photo during the morph. The live copy inside each box is dropped the
+  instant a section opens (the live box is already tab-shaped and taller than
+  the square, so a fading live copy would peek out below the outline). A copy
+  painted on the group's image-pair pseudo, which is clipped by the morphing
+  group, fades instead: out over the first quarter on open, back in over the
+  last 40% on close, never shown between two tabs. views.js marks <html>
+  with data-vt=open|close|tab for the length of the transition.
+*/
+::view-transition-image-pair(box-now),
+::view-transition-image-pair(box-elsewhere),
+::view-transition-image-pair(box-battleforce) {
+  overflow: hidden;
+  background-image: url("img/scarpa-wide.jpg");
+  background-repeat: no-repeat;
+  background-size: var(--row-w) auto;
+  background-position: 0 center;
+  filter: grayscale(1) contrast(1.12);
+  opacity: 0;
+}
+::view-transition-image-pair(box-elsewhere)   { background-position: calc(-1 * (var(--box-w) + var(--box-gap))) center; }
+::view-transition-image-pair(box-battleforce) { background-position: calc(-2 * (var(--box-w) + var(--box-gap))) center; }
+
+html[data-vt="open"]::view-transition-image-pair(box-now),
+html[data-vt="open"]::view-transition-image-pair(box-elsewhere),
+html[data-vt="open"]::view-transition-image-pair(box-battleforce) {
+  animation: photo-out calc(var(--dur) * 0.25) ease both;
+}
+html[data-vt="close"]::view-transition-image-pair(box-now),
+html[data-vt="close"]::view-transition-image-pair(box-elsewhere),
+html[data-vt="close"]::view-transition-image-pair(box-battleforce) {
+  animation: photo-in calc(var(--dur) * 0.4) ease calc(var(--dur) * 0.6) both;
+}
+@keyframes photo-out { from { opacity: var(--photo-op); } to { opacity: 0; } }
+@keyframes photo-in  { from { opacity: 0; } to { opacity: var(--photo-op); } }
 
 /*
   The page itself is not animated at all. Holding the root group still and

@@ -114,11 +114,13 @@
     return ms > 0 ? ms : 450;
   }
 
-  function morph(change) {
+  function morph(change, kind) {
     if (!document.startViewTransition || body.classList.contains('no-anim')) {
       change();
       return;
     }
+    // open | close | tab: the stylesheet times the photo fade off this.
+    document.documentElement.setAttribute('data-vt', kind || 'tab');
 
     // While the morph runs the boxes drop their own border and the
     // ::view-transition-group pseudo draws it instead: on the group it is a
@@ -143,6 +145,7 @@
       if (!body.classList.contains('morphing')) { return; }
       boxes.forEach(function (b) { b.style.transition = 'none'; });
       body.classList.remove('morphing');
+      document.documentElement.removeAttribute('data-vt');
       // Tear the pseudo tree down in the same frame the boxes take their
       // border back. Two borders drawn a sub-pixel apart for even one frame
       // read as a jitter; skipping the last few milliseconds does not.
@@ -197,10 +200,11 @@
 
   function setOpen(next) {
     if (next === open || swapping) { return; }
+    var kind = !open ? 'open' : (!next ? 'close' : 'tab');
     morph(function () {
       open = next;
       render();
-    });
+    }, kind);
   }
 
   function setView(next) {
