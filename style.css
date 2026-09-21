@@ -546,42 +546,22 @@ body.visual .box.is-open .box-label { color: var(--ink); }
   and make the swap a hard cut.
 */
 body.visual .box-face {
-  transition: opacity calc(var(--dur) * 0.45) ease calc(var(--dur) * 0.55);
+  /* Closing: the horizontal label comes back over the last 40%. */
+  transition: opacity calc(var(--dur) * 0.4) ease calc(var(--dur) * 0.6);
 }
 
 body.visual .box-label--v {
-  transition: opacity calc(var(--dur) * 0.45) ease 0s,
+  /* Closing: the vertical label leaves at once. */
+  transition: opacity calc(var(--dur) * 0.15) ease 0s,
               color 200ms ease 0s;
 }
 
-body.visual[data-open] .box-face     { transition-delay: 0s; }
-body.visual[data-open] .box-label--v { transition-delay: calc(var(--dur) * 0.55), 0s; }
-
-
-/* ---- The drawing behind the boxes ----------------------------------- */
-
-/*
-  One photograph runs across all three boxes: each box paints the same image
-  at the full row width and shifts it left by its own index, so the gaps read
-  as cuts through a single picture rather than three separate pictures.
-*/
-body.visual .box::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background-image: url("img/scarpa-wide.jpg");
-  background-repeat: no-repeat;
-  background-size: var(--row-w) auto;
-  background-position: calc(-1 * var(--i) * (var(--box-w) + var(--box-gap))) center;
-  filter: grayscale(1) contrast(1.12);
-  opacity: var(--photo-op);
-  /* Out over the first half of the morph when a section opens, back in over
-     the second half when it closes. */
-  transition: opacity calc(var(--dur) * 0.5) ease calc(var(--dur) * 0.5);
-}
-
-body.visual[data-open] .box::after { opacity: 0; transition-delay: 0s; }
+/* Opening: what leaves goes at once, so the outline morphs empty and the live
+   tab-width layout never shows as a clipped strip inside the big frame; what
+   arrives fades in over the last 40%. */
+body.visual[data-open] .box-face     { transition: opacity calc(var(--dur) * 0.15) ease 0s; }
+body.visual[data-open] .box-label--v { transition-delay: calc(var(--dur) * 0.6), 0s;
+                                       transition-duration: calc(var(--dur) * 0.4), 200ms; }
 
 #box-now         { --i: 0; }
 #box-elsewhere   { --i: 1; }
