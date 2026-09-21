@@ -685,6 +685,26 @@ body.visual[data-open] .pane section:not([hidden]) { view-transition-name: pane-
 }
 
 /*
+  The border is the one thing that must not cross-fade. Snapshots are flat
+  images, so a border painted into them can only fade from the square to the
+  tab. views.js puts "morphing" on <body> for the length of the transition;
+  the boxes go borderless for both snapshots and the group pseudo, a real box
+  whose width and height are what the browser animates, draws the line.
+*/
+body.morphing .box {
+  border-color: transparent !important;   /* outranks the dimmed unselected-tab rule */
+  transition: none;                        /* or the old snapshot keeps the fading border */
+}
+body.morphing .box.is-open::before { opacity: 0; }
+
+::view-transition-group(box-now),
+::view-transition-group(box-elsewhere),
+::view-transition-group(box-battleforce) {
+  box-sizing: border-box;
+  border: 1px solid var(--brass);
+}
+
+/*
   The cross-fade runs for the whole morph, not the 250ms default, so content
   changes with the shape. Each snapshot is held at the size it was captured at
   and clipped to the group: stretching a 17rem square box into a 3.5rem tab

@@ -111,10 +111,15 @@
     if (document.startViewTransition && !body.classList.contains('no-anim')) {
       // A hidden tab aborts the transition; the state change still applies,
       // so the rejection is noise.
+      // While the morph runs the boxes drop their own border and the
+      // ::view-transition-group pseudo draws it instead. A border baked into
+      // the two snapshots would only cross-fade (square fading out, tab fading
+      // in); on the group it is a real box that changes shape.
+      body.classList.add('morphing');
       var t = document.startViewTransition(change);
       var quiet = function () {};
       t.ready.catch(quiet);
-      t.finished.catch(quiet);
+      t.finished.catch(quiet).then(function () { body.classList.remove('morphing'); });
     } else {
       change();
     }
