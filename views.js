@@ -109,6 +109,12 @@
     run. There is no second animation path, and the OS reduced-motion
     preference is deliberately ignored: the owner wants this for everyone.
   */
+  function centre(el) {
+    if (!el || el.offsetParent === null) { return null; }
+    var r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  }
+
   function duration() {
     var ms = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dur'));
     return ms > 0 ? ms : 450;
@@ -127,7 +133,30 @@
     // real rectangle that changes shape, not a picture of a border.
     body.classList.add('morphing');
 
-    var t = document.startViewTransition(change);
+    // FLIP the labels: remember where each one sits, let the state change
+    // move it, then start it back at the old spot and let CSS carry it home.
+    var labels = [];
+    boxes.forEach(function (b) {
+      labels.push(b.querySelector('.box-face'), b.querySelector('.box-label--v'));
+    });
+    var before = labels.map(centre);
+
+    var t = document.startViewTransition(function () {
+      change();
+      labels.forEach(function (el, i) {
+        var was = before[i], now = centre(el);
+        if (!was || !now) { return; }
+        var dx = was.x - now.x, dy = was.y - now.y;
+        if (!dx && !dy) { return; }
+        var rest = el.classList.contains('box-label--v') ? ' rotate(180deg)' : '';
+        // A Web Animation, not an inline transform: it runs alongside the
+        // CSS opacity transition instead of resetting it.
+        el.animate(
+          [{ transform: 'translate(' + dx + 'px, ' + dy + 'px)' + rest }, { transform: rest.trim() || 'none' }],
+          { duration: duration(), easing: 'ease-in-out', fill: 'none' }
+        );
+      });
+    });
 
     // Hand the border back one frame before the pseudo tree is torn down, with
     // the fade suppressed, so nothing blinks at the seam. The clock starts

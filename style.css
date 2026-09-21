@@ -495,8 +495,7 @@ body.visual .box.is-open::before {
   the whole box, so the swap dissolves while the box changes shape. The
   duplicate is aria-hidden.
 */
-body.visual .box-face,
-body.visual .box-label--v {
+body.visual .box-face {
   position: absolute;
   inset: 0;
   z-index: 1;
@@ -515,6 +514,12 @@ body.visual .box-face {
 }
 
 body.visual .box-label--v {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   writing-mode: vertical-rl;
   transform: rotate(180deg);              /* reads bottom to top */
   font-size: 1rem;
@@ -522,8 +527,6 @@ body.visual .box-label--v {
   opacity: 0;
 }
 
-body.visual[data-open] .box-face { opacity: 0; }
-body.visual[data-open] .box-label--v { opacity: 1; }
 
 body.visual .box-label {
   font-family: var(--sans);
@@ -547,35 +550,46 @@ body.visual .box.is-open .box-label { color: var(--ink); }
   a .box-label, and that shorthand would otherwise drop the opacity transition
   and make the swap a hard cut.
 */
-body.visual .box-face {
-  /* Closing: the horizontal label comes back over the last 40%. */
-  transition: opacity calc(var(--dur) * 0.4) ease calc(var(--dur) * 0.6);
-}
+/*
+  Labels ride with their box. views.js measures each label's centre before
+  and after the state change and starts it at the old centre with an inline
+  translate (FLIP); the transform then transitions to rest over --dur with
+  the same easing as the outlines, so the text travels with the box in both
+  engines (Firefox paints live elements, and snapshots of text never show
+  there). Opacity cross-fades the horizontal and vertical forms on the way:
+  the one leaving fades over the first 60%, the one arriving over the last
+  60%. Between two tabs the vertical labels just translate.
 
+  Sits below the .box-label colour rule above, which would otherwise clobber
+  the vertical label's transition list.
+*/
+body.visual .box-face,
 body.visual .box-label--v {
-  /* Closing: the vertical label leaves at once. */
-  transition: opacity calc(var(--dur) * 0.15) ease 0s,
-              color 200ms ease 0s;
+  white-space: nowrap;
+  will-change: transform, opacity;
 }
 
-/* Opening: what leaves goes at once, so the outline morphs empty and the live
-   tab-width layout never shows as a clipped strip inside the big frame; what
-   arrives fades in over the last 40%. */
-body.visual[data-open] .box-face     { transition: opacity calc(var(--dur) * 0.08) ease 0s; }
-body.visual[data-open] .box-label--v { transition-delay: calc(var(--dur) * 0.6), 0s;
-                                       transition-duration: calc(var(--dur) * 0.4), 200ms; }
-
-/* Tab to tab: both states show vertical labels at full opacity, so without
-   help they would simply stand at their destinations while the outlines
-   travel. Drop them at once and bring them back over the last third. */
-html[data-vt="tab"] body.visual .box-label--v {
-  animation: label-hop var(--dur) ease both;
+body.visual .box-face {                     /* closing: arrives late */
+  transition: opacity calc(var(--dur) * 0.6) ease calc(var(--dur) * 0.4);
 }
-@keyframes label-hop {
-  0%   { opacity: 1; }
-  10%  { opacity: 0; }
-  65%  { opacity: 0; }
-  100% { opacity: 1; }
+body.visual[data-open] .box-face {          /* opening: leaves at once */
+  opacity: 0;
+  transition: opacity calc(var(--dur) * 0.6) ease 0s;
+}
+
+body.visual .box-label--v {                 /* closing: leaves at once */
+  transition: opacity calc(var(--dur) * 0.6) ease 0s,
+              color 200ms ease;
+}
+body.visual[data-open] .box-label--v {      /* opening: arrives late */
+  opacity: 1;
+  transition: opacity calc(var(--dur) * 0.6) ease calc(var(--dur) * 0.4),
+              color 200ms ease;
+}
+
+/* A label in flight may sit outside its box for a moment. */
+body.morphing .box { overflow: visible; }
+
 }
 
 /*
