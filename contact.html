@@ -21,17 +21,18 @@
 <div class="page">
 
   <nav class="topnav" aria-label="Site">
-    <!-- Unhidden by theme.js; without JavaScript the page follows the system theme. -->
+    <!-- Same nav as the home page. The view link points back home in the other view. -->
     <button type="button" class="theme" id="theme" aria-label="Color theme: system" title="Theme: system" data-theme-state="system" hidden>
       <svg class="ico ico-light" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg>
       <svg class="ico ico-dark" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>
       <svg class="ico ico-system" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="12" rx="1"/><path d="M9 20h6M12 16.5V20"/></svg>
     </button>
-    <a href="./">Home</a>
+    <a class="viewtoggle" id="view-toggle" href="./?view=linear" hidden>Linear</a>
+    <a href="contact.html" aria-current="page">Contact me</a>
   </nav>
 
   <header class="masthead">
-    <h1>Sebastian Mankowski</h1>
+    <h1><a href="./">Sebastian Mankowski</a></h1>
     <p class="descriptor">Product manager. Founding team at Sandgarden. Previously security products at BeyondTrust and StrongDM.</p>
   </header>
 
@@ -41,7 +42,7 @@
       <p>Questions about the work, the game, or a role. I read everything.</p>
 
       <form class="form" id="contact-form" action="https://api.web3forms.com/submit" method="POST">
-        <input type="hidden" name="access_key" value="WEB3FORMS_ACCESS_KEY">
+        <input type="hidden" name="access_key" value="9dec7e15-5593-4cf2-b5e2-4f7c9ea7e634">
         <input type="hidden" name="subject" value="New message from sebastianmankowski.com">
         <input type="checkbox" name="botcheck" class="hidden" style="display:none" tabindex="-1" autocomplete="off">
 
@@ -71,6 +72,19 @@
 </div>
 
 <script src="theme.js"></script>
+<script>
+// The view link mirrors the home page: it names the view it would take you to.
+(function () {
+  var a = document.getElementById('view-toggle');
+  if (!a) return;
+  var v = null;
+  try { v = localStorage.getItem('sm-view'); } catch (e) {}
+  var linear = (v === 'linear' || v === 'simple');
+  a.textContent = linear ? 'Visual' : 'Linear';
+  a.href = linear ? './?view=visual' : './?view=linear';
+  a.hidden = false;
+})();
+</script>
 
 <script>
 (function () {

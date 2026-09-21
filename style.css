@@ -108,6 +108,10 @@ body {
 }
 
 .topnav a { text-decoration: none; color: var(--ink-muted); }
+.topnav a[aria-current="page"] { color: var(--ink); }
+
+/* "Visual" and "Linear" differ in width; a fixed box keeps the icon still. */
+.viewtoggle { display: inline-block; width: 3.4rem; text-align: right; }
 .topnav a:hover, .topnav a:focus-visible { color: var(--red); }
 
 /* ---- Theme control -------------------------------------------------- */
@@ -136,6 +140,9 @@ body {
 .theme[data-theme-state="system"] .ico-system { display: block; }
 
 /* ---- Masthead ------------------------------------------------------ */
+
+.masthead h1 a { color: inherit; text-decoration: none; }
+.masthead h1 a:hover, .masthead h1 a:focus-visible { color: inherit; }
 
 .masthead h1 {
   font-family: var(--serif);
@@ -448,10 +455,10 @@ body.visual .box:focus-visible { outline-offset: -4px; }
 
 /* Hover and focus take the border and the label together. */
 body.visual .box:hover,
-body.visual .box:focus-visible { border-color: var(--red); }
+body.visual .box:focus-visible { border-color: var(--ink); }
 
 body.visual .box:hover .box-label,
-body.visual .box:focus-visible .box-label { color: var(--red); }
+body.visual .box:focus-visible .box-label { color: var(--ink); }
 
 body.visual[data-open] .box { flex: 0 0 var(--tab-w); }
 
@@ -476,7 +483,7 @@ body.visual .box.is-open::before {
 /* ---- Labels -------------------------------------------------------- */
 
 /*
-  Two labels sit on top of each other: the horizontal one with its teaser, and
+  Two labels sit on top of each other: the horizontal one and
   a vertical duplicate for the tab state. Rotating one element would hard-cut
   between writing modes, so they cross-fade over the same duration as the
   box geometry. The duplicate is aria-hidden.
@@ -494,9 +501,10 @@ body.visual .box-label--v {
 
 body.visual .box-face {
   flex-direction: column;
-  gap: 0.5rem;
   padding: 0 0.7rem;
   opacity: 1;
+  /* Closing: horizontal label fades back in during the second half. */
+  transition: opacity calc(var(--dur) / 2) ease-out calc(var(--dur) / 2);
 }
 
 body.visual .box-label--v {
@@ -507,8 +515,17 @@ body.visual .box-label--v {
   opacity: 0;
 }
 
-body.visual[data-open] .box-face     { opacity: 0; }
-body.visual[data-open] .box-label--v { opacity: 1; }
+/* Opening: horizontal label fades out in the first half, vertical fades in
+   during the second, so the two never sit on top of each other. */
+body.visual[data-open] .box-face {
+  opacity: 0;
+  transition: opacity calc(var(--dur) / 2) ease-in;
+}
+body.visual[data-open] .box-label--v {
+  opacity: 1;
+  transition: opacity calc(var(--dur) / 2) ease-out calc(var(--dur) / 2);
+}
+body.visual .box-label--v { transition: opacity calc(var(--dur) / 2) ease-in; }
 
 body.visual .box-label {
   font-family: var(--sans);
@@ -522,14 +539,6 @@ body.visual .box-label {
 
 body.visual .box.is-open .box-label { color: var(--ink); }
 
-body.visual .box-teaser {
-  font-size: 0.78rem;
-  line-height: 1.3;
-  letter-spacing: 0;
-  color: var(--ink-muted);
-  text-align: center;
-  max-width: 100%;
-}
 
 /* ---- The drawing behind the boxes ----------------------------------- */
 
@@ -637,7 +646,6 @@ body.visual .pane section { margin: 0; }
   body.visual[data-open] .box-face { opacity: 1; }
   body.visual[data-open] .box-label--v { opacity: 0; }
   body.visual[data-open] .box-label { font-size: 0.95rem; }
-  body.visual[data-open] .box-teaser { display: none; }
 
   body.visual .pane,
   body.visual[data-open] .pane {

@@ -19,8 +19,8 @@
 <!--
   Image credits (also in README.md).
 
-  img/scarpa-wide.jpg  "Palazzo Querini Stampalia, piano terra e giardino di Carlo Scarpa"
-                       by Sailko. CC BY 3.0. Cropped to 3:1, desaturated, recompressed.
+  img/scarpa-wide.jpg  "Altivole - Tomba Brion - 2024-09-28 20-27-56 009" by Viaggiamocela.
+                       CC BY-SA 4.0. Cropped to 3:1, recompressed. Desaturated in CSS.
                        https://commons.wikimedia.org/wiki/File:Palazzo_querini_stampalia,_piano_terra_e_giardino_di_carlo_scarpa_01.jpg
 
   img/pax-pamir.jpg    Pax Pamir, second edition, mid-game. Supplied by the site owner;
@@ -44,7 +44,7 @@
   </nav>
 
   <header class="masthead">
-    <h1>Sebastian Mankowski</h1>
+    <h1><a href="./">Sebastian Mankowski</a></h1>
     <p class="descriptor">Product manager. Founding team at Sandgarden. Previously security products at BeyondTrust and StrongDM.</p>
   </header>
 
@@ -57,7 +57,6 @@
               aria-expanded="false" aria-controls="sec-now" hidden>
         <span class="box-face">
           <span class="box-label">now</span>
-          <span class="box-teaser">Sandgarden, Doc Holiday, Featurette</span>
         </span>
         <span class="box-label box-label--v" aria-hidden="true">now</span>
       </button>
@@ -65,7 +64,6 @@
               aria-expanded="false" aria-controls="sec-elsewhere" hidden>
         <span class="box-face">
           <span class="box-label">elsewhere</span>
-          <span class="box-teaser">GitHub, LinkedIn, games</span>
         </span>
         <span class="box-label box-label--v" aria-hidden="true">elsewhere</span>
       </button>
@@ -73,7 +71,6 @@
               aria-expanded="false" aria-controls="sec-battleforce" hidden>
         <span class="box-face">
           <span class="box-label">battleforce</span>
-          <span class="box-teaser">fan project</span>
         </span>
         <span class="box-label box-label--v" aria-hidden="true">battleforce</span>
       </button>
@@ -97,7 +94,6 @@
         </ul>
         <figure class="shot">
           <img src="img/pax-pamir.jpg" alt="Pax Pamir board mid-game" width="1400" height="538" loading="lazy" decoding="async">
-          <figcaption>Pax Pamir, second edition. Yes, it is that good.</figcaption>
         </figure>
       </section>
 
@@ -106,10 +102,9 @@
         <p>A digital implementation of the BattleForce game system, built for people who already own the books and want to stop doing the arithmetic by hand. It is an unofficial fan project, not affiliated with or endorsed by Catalyst Game Labs, Topps, or Microsoft. BattleTech and BattleForce are trademarks of their respective owners.</p>
 
         <form class="form form--inline"
-              action="https://buttondown.com/api/emails/embed-subscribe/BUTTONDOWN_USERNAME"
-              method="post"
-              target="popupwindow"
-              onsubmit="window.open('https://buttondown.com/BUTTONDOWN_USERNAME', 'popupwindow')">
+              action="https://buttondown.com/api/emails/embed-subscribe/battleforce_game"
+              method="post">
+          <input type="hidden" name="embed" value="1">
           <label for="bd-email">Sign up to hear more</label>
           <div class="row">
             <input id="bd-email" type="email" name="email" autocomplete="email" placeholder="you@example.com" required>

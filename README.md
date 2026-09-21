@@ -27,7 +27,7 @@ heights. It is what the HTML renders on its own, so it is also what you get with
 JavaScript off.
 
 **Visual view** is the default. Three square boxes sit below the masthead, each with a
-large lowercase label, a one-line teaser, and its own slice of a single Scarpa photograph
+large lowercase label and its own slice of a single Scarpa photograph
 running across all three. Picking one collapses all three into narrow vertical tabs and
 opens that section's text between them: the tabs up to and including the selected one stay
 on the left, the rest move to the right. Click the open tab again, or press Escape, to go
@@ -108,7 +108,7 @@ Update the credits below and the comment at the top of `index.html` when you swa
 
 | File | Work | Author | License |
 | --- | --- | --- | --- |
-| `img/scarpa-wide.jpg` | [Palazzo Querini Stampalia, piano terra e giardino di Carlo Scarpa](https://commons.wikimedia.org/wiki/File:Palazzo_querini_stampalia,_piano_terra_e_giardino_di_carlo_scarpa_01.jpg), via Wikimedia Commons | Sailko | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) |
+| `img/scarpa-wide.jpg` | [Altivole - Tomba Brion - 2024-09-28 20-27-56 009](https://commons.wikimedia.org/wiki/File:Altivole_-_Tomba_Brion_-_2024-09-28_20-27-56_009.jpg), via Wikimedia Commons | Viaggiamocela | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
 | `img/pax-pamir.jpg` | Pax Pamir, second edition, mid-game | the site owner | own photograph |
 
 The Scarpa photograph has been cropped to 3:1, desaturated and recompressed; the Pax Pamir
@@ -120,22 +120,22 @@ an HTML comment at the top of `index.html` so they travel with the page.
 Two literal strings in `index.html` must be replaced. The site will render fine without
 doing so, but both forms will fail on submit.
 
-### `BUTTONDOWN_USERNAME`
+### `battleforce_game (set)`
 
 Appears twice in the BattleForce section (the form `action` and the `onsubmit` popup URL).
 
 1. Create a free account at https://buttondown.com.
 2. Your username is the last path segment of your public newsletter URL,
    `https://buttondown.com/<username>`. It is also shown under Settings, Basics.
-3. Replace both occurrences of `BUTTONDOWN_USERNAME` with it.
+3. Replace both occurrences of `battleforce_game (set)` with it.
 
-### `WEB3FORMS_ACCESS_KEY`
+### `the Web3Forms key (set)`
 
 Appears once, in the hidden `access_key` input of the contact form.
 
 1. Go to https://web3forms.com, enter the destination email address, and submit.
 2. Web3Forms emails an access key (a UUID). Confirm the address from that email.
-3. Replace `WEB3FORMS_ACCESS_KEY` with the key.
+3. Replace `the Web3Forms key (set)` with the key.
 
 The access key is a public, write-only submission token; it is safe in client-side HTML.
 The destination address is held by Web3Forms and never appears in this repo. Keep it that
