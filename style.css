@@ -590,8 +590,6 @@ body.visual[data-open] .box-label--v {      /* opening: arrives late */
 /* A label in flight may sit outside its box for a moment. */
 body.morphing .box { overflow: visible; }
 
-}
-
 /*
   One photograph runs across all three boxes: each box paints the same image
   at the full row width and shifts it left by its own index, so the gaps read
