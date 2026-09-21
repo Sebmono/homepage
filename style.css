@@ -25,7 +25,7 @@
 
   /* How long the morph runs. It lives on the root because the view transition
      pseudo-elements hang off <html> and inherit from it, not from <body>. */
-  --dur: 450ms;
+  --dur: 800ms;
 
   /* The wide frame: the visual view's box row, and what the top nav aligns to. */
   --wide:  53rem;                         /* ~1.4x the text measure */
