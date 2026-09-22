@@ -243,23 +243,15 @@ The contact form posts via `fetch` and shows an inline "Thanks" state without le
 page. The honeypot `botcheck` checkbox is hidden and must stay empty; Web3Forms drops any
 submission that fills it.
 
-## Deploy to Cloudflare Pages
+## Deploying
 
-1. Push this repo to GitHub.
-2. Cloudflare dashboard, Workers & Pages, Create, Pages, Connect to Git. Authorize and
-   pick this repository.
-3. Build settings:
-   - Framework preset: **None**
-   - Build command: **leave empty**
-   - Build output directory: **`/`**
-   - Root directory: **`/`**
-4. Save and Deploy. The site lands on `<project>.pages.dev`.
-5. Custom domains, Set up a custom domain. Add both `sebastianmankowski.com` and
-   `www.sebastianmankowski.com`.
+Cloudflare Workers with static assets, built by Workers Builds from this repo on every push to `main`.
 
-`_headers` and `_redirects` are read automatically by Pages on each deploy. The
-`_redirects` file sends `www` to the apex with a 301; if you would rather have the apex
-redirect to `www`, reverse the two rules and adjust the custom domains accordingly.
+- `wrangler.jsonc` points the assets directory at `./public`. Only `public/` is uploaded; the repo root never is.
+- Deploy command: `npx wrangler deploy` (the Workers Builds default). No build command.
+- `public/_headers` sets the security headers. There is no `_redirects`: Workers static assets only accept relative redirects, so www to apex is a Cloudflare Redirect Rule on the zone instead.
+- Local check: `npx wrangler dev`, then open http://localhost:8787.
+
 
 ## DNS at Porkbun
 

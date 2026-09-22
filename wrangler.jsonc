@@ -1,0 +1,11 @@
+{
+  // Cloudflare Workers with static assets. Only ./public is uploaded, so the
+  // repo root (README, .git, this file) never becomes part of the site.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "homepage",
+  "compatibility_date": "2026-09-22",
+  "assets": {
+    "directory": "./public",
+    "html_handling": "auto-trailing-slash"
+  }
+}
