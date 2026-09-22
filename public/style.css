@@ -613,6 +613,14 @@ body.visual .box::after {
 
 body.visual[data-open] .box::after { opacity: 0; transition: none; }
 
+/* While a morph runs, the copy painted inside the moving outline is the only
+   photo on screen. Leaving the live copy fading in underneath it doubled the
+   image on close (brighter than rest, then a snap back when the pseudo tree
+   went). The live copy returns at full strength, with no fade, in the same
+   frame the transition hands back. */
+body.morphing .box::after { opacity: 0; transition: none; }
+body.visual .box::after { transition: none; }
+
 #box-now         { --i: 0; }
 #box-elsewhere   { --i: 1; }
 #box-battleforce { --i: 2; }
